@@ -11,7 +11,7 @@ Instagram leaves the home screen after its second short session of the day.
 Swipe up also opens a dedicated **search screen** with the keyboard already up.
 Everything else is Victoria as it was at 0.77.1.
 
-![The same home screen at the office and at home in the evening, and the rule that shows Slack only on the office Wi-Fi during working hours](docs/visibility-rules.png)
+![The Niagara-style A-Z list with its letter strip, the same home screen at the office and at home in the evening, and the rule that shows Slack only on the office Wi-Fi during working hours](docs/visibility-rules.png)
 
 ## What is different from Victoria
 
