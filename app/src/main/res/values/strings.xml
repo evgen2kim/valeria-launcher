@@ -448,4 +448,6 @@ The launcher reads only the network name, and only while it is on screen. It nev
 
     <string name="home_reveal_hidden">Show hidden for now</string>
     <string name="home_rehide">Hide again</string>
+    <string name="settings_swipe_up_search_screen">Swipe up opens a search screen</string>
+    <string name="settings_swipe_up_search_screen_detail">Just a search box with the keyboard up, no A-Z list. Pull past the catch and it snaps open</string>
 </resources>

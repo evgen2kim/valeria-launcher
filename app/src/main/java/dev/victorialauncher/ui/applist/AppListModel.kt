@@ -247,3 +247,20 @@ fun AppListModel.rankedBy(rank: (AppInfo) -> Int): AppListModel {
     }
     return AppListModel(sorted, letterIndex)
 }
+
+/**
+ * What a query turns up: every app whose name — or, failing that, package — holds the term,
+ * best match first. Shared by the app list's own search and the search screen, so the two
+ * never disagree about what a word finds.
+ */
+fun AppListModel.searchFor(query: String, displayName: (AppInfo) -> String): AppListModel {
+    val term = query.trim()
+    return filtered { app ->
+        displayName(app).contains(term, ignoreCase = true) ||
+            // An app names itself in the language of the device, so on a Japanese phone
+            // Settings calls itself 設定 and no amount of typing "settings" reaches it. Package
+            // names are ASCII almost without exception, so the English word is usually sitting
+            // right there in com.android.settings.
+            app.componentName.packageName.contains(term, ignoreCase = true)
+    }.rankedBy { searchRank(displayName(it), it.componentName.packageName, term) }
+}

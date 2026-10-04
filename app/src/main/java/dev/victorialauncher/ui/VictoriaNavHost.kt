@@ -288,6 +288,7 @@ fun VictoriaNavHost(
     val holdScroll by app.prefs.holdScroll.collectAsState(initial = false)
     val webSearchFallback by app.prefs.webSearchFallback.collectAsState(initial = false)
     val swipeUpOpensSearch by app.prefs.swipeUpOpensSearch.collectAsState(initial = false)
+    val swipeUpSearchScreen by app.prefs.swipeUpSearchScreen.collectAsState(initial = false)
     val holdScrollSpeed by app.prefs.holdScrollSpeed.collectAsState(initial = 4)
     // Noted the first time there is one, and never unset. Whether the hint is still wanted is a
     // question about whether someone has done this before, not about the list being empty now.
@@ -666,6 +667,7 @@ fun VictoriaNavHost(
                 cornerButtonApp = cornerButtonKey?.takeIf { it != EntryKeys.SEARCH }?.let { appsByKey[it] },
                 cornerButtonIsSearch = cornerButtonKey == EntryKeys.SEARCH,
                 autoKeyboard = autoKeyboard,
+                swipeUpSearchScreen = swipeUpSearchScreen,
                 lastLetterToLine = lastLetterToLine,
                 app = app,
                 homeIntentTick = homeIntentTick,
@@ -736,6 +738,8 @@ fun VictoriaNavHost(
                 onSetWebSearchFallback = { scope.launch { app.prefs.setWebSearchFallback(it) } },
                 swipeUpOpensSearch = swipeUpOpensSearch,
                 onSetSwipeUpOpensSearch = { scope.launch { app.prefs.setSwipeUpOpensSearch(it) } },
+                swipeUpSearchScreen = swipeUpSearchScreen,
+                onSetSwipeUpSearchScreen = { scope.launch { app.prefs.setSwipeUpSearchScreen(it) } },
                 onSetHoldScroll = { scope.launch { app.prefs.setHoldScroll(it) } },
                 holdScrollSpeed = holdScrollSpeed,
                 onSetHoldScrollSpeed = { scope.launch { app.prefs.setHoldScrollSpeed(it) } },

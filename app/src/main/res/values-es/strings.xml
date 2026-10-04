@@ -240,4 +240,6 @@
     <string name="now_playing_previous">Anterior</string>
     <string name="now_playing_play_pause">Reproducir/pausar</string>
     <string name="now_playing_next">Siguiente</string>
+    <string name="settings_swipe_up_search_screen">Deslizar hacia arriba abre la búsqueda</string>
+    <string name="settings_swipe_up_search_screen_detail">Solo un cuadro de búsqueda con el teclado, sin lista A-Z. Tira más allá del tope y se abre de golpe</string>
 </resources>

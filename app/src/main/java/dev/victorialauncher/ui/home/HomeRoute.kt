@@ -2,6 +2,7 @@
 package dev.victorialauncher.ui.home
 
 import android.app.SearchManager
+import android.view.HapticFeedbackConstants
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -76,6 +77,7 @@ import dev.victorialauncher.media.isListenerEnabled
 import dev.victorialauncher.service.SystemUi
 import dev.victorialauncher.ui.applist.AppListModel
 import dev.victorialauncher.ui.applist.AppListScreen
+import dev.victorialauncher.ui.applist.SearchScreen
 import dev.victorialauncher.ui.applist.BandEditOverlay
 import dev.victorialauncher.ui.applist.EdgeScrubber
 import dev.victorialauncher.ui.applist.EdgeTouchZone
@@ -116,6 +118,19 @@ private const val HOME_FADE_MS = 220
 private val SWIPE_OPEN_DISTANCE = 150.dp
 
 /**
+ * The catch the search screen is held behind. Short of it the screen only leans out under the
+ * finger and falls back on release; the moment the swipe passes it, the screen is let go and
+ * snaps the rest of the way in on its own, whatever the finger does after.
+ */
+private val SEARCH_CATCH_DISTANCE = 150.dp
+
+/** How far out the search screen leans just short of the catch, as a share of fully open. */
+private const val SEARCH_LEAN = 0.3f
+
+/** A flick up this fast clears the catch even when it is let go short of it. */
+private const val SEARCH_FLICK_VELOCITY = -2600f
+
+/**
  * The home destination: the home screen itself, the app-list overlay layered over it, and the
  * edge zones that move between them.
  *
@@ -138,6 +153,8 @@ fun HomeRoute(
     cornerButtonIsSearch: Boolean,
     /** Whether opening the app list puts the cursor in its search box. */
     autoKeyboard: Boolean,
+    /** Whether swiping up brings in the search screen rather than the app list. */
+    swipeUpSearchScreen: Boolean,
     /** Whether the last letters reach the same line as the first. */
     lastLetterToLine: Boolean,
     typedToSearch: List<TypedKey>,
@@ -351,6 +368,50 @@ fun HomeRoute(
     // A keystroke on the home screen opens the list already searching for it. Only when there
     // is a search field to type into: without one the query filters a list showing no sign of
     // why, and there would be nothing on screen to clear it with.
+    // The search screen: its own query, its own opening, nothing shared with the list's.
+    // Visible from the first pixel of the swipe; open once the swipe has cleared the catch.
+    var searchVisible by remember { mutableStateOf(false) }
+    var searchOpen by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    val searchAnim = remember { Animatable(0f) }
+    val searchCatchPx = with(LocalDensity.current) { SEARCH_CATCH_DISTANCE.toPx() }
+
+    fun closeSearch(snap: Boolean = false) {
+        if (!searchVisible) return
+        searchOpen = false
+        if (snap) {
+            searchQuery = ""
+            searchVisible = false
+            scope.launch { searchAnim.snapTo(0f) }
+        } else {
+            scope.launch {
+                searchAnim.animateTo(0f, tween(180, easing = FastOutLinearInEasing))
+                // Not if the screen was pulled back in while it was on its way out.
+                if (!searchOpen) {
+                    searchQuery = ""
+                    searchVisible = false
+                }
+            }
+        }
+    }
+
+    fun openSearch() {
+        if (searchOpen) return
+        searchOpen = true
+        searchVisible = true
+        // The click of the catch giving way: the one moment a finger should feel.
+        if (settings.hapticsEnabled) view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        scope.launch {
+            searchAnim.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = 0.8f,
+                    stiffness = Spring.StiffnessMedium,
+                ),
+            )
+        }
+    }
+
     LaunchedEffect(typedToSearch) {
         if (typedToSearch.isEmpty()) return@LaunchedEffect
         val taken = typedToSearch
@@ -387,6 +448,7 @@ fun HomeRoute(
             delay(LAUNCH_CLOSE_TIMEOUT_MS)
             launchClose = null
             closeAppList()
+            closeSearch()
         }
     }
 
@@ -427,6 +489,7 @@ fun HomeRoute(
     DisposableEffect(Unit) { onDispose { onAppListVisibleChange(false) } }
 
     BackHandler(enabled = appListVisible) { closeAppList() }
+    BackHandler(enabled = searchVisible) { closeSearch() }
 
     // Every stepper commits as it is tapped, so there is nothing to save on the way out —
     // but leaving edit mode had to be done through the Done button, and BACK simply escaped
@@ -450,13 +513,19 @@ fun HomeRoute(
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_PAUSE) closeAppList(snap = true)
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                closeAppList(snap = true)
+                closeSearch(snap = true)
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     LaunchedEffect(homeIntentTick) {
-        if (homeIntentTick > 0) closeAppList(snap = true)
+        if (homeIntentTick > 0) {
+            closeAppList(snap = true)
+            closeSearch(snap = true)
+        }
     }
 
     LaunchedEffect(settings.edgeSide, settings.edgeZoneWidthDp, view, band) {
@@ -550,9 +619,21 @@ fun HomeRoute(
                     .background(Color(settings.dimColor).copy(alpha = wallpaperDim)),
             )
         }
+        // The search screen reads against the list's dim, not the home screen's. Laid over the
+        // home dim rather than replacing it, so this is only the difference between the two,
+        // and it comes in with the screen.
+        if (searchVisible && settings.dimWallpaperAlpha > homeDim) {
+            val extra = (settings.dimWallpaperAlpha - homeDim) / (1f - homeDim)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = searchAnim.value.coerceIn(0f, 1f) }
+                    .background(Color(settings.dimColor).copy(alpha = extra)),
+            )
+        }
         Box(
             modifier = Modifier
-                .graphicsLayer { alpha = homeAlpha }
+                .graphicsLayer { alpha = homeAlpha * (1f - searchAnim.value.coerceIn(0f, 1f)) }
                 .then(
                     // Hidden, but still laid out: an AppWidgetHostView that is never placed
                     // loses its layout and comes back with its text collapsed.
@@ -672,6 +753,23 @@ fun HomeRoute(
                 centerFavorites = settings.centerFavorites,
                 swipeUpOpensAppList = settings.swipeUpOpensAppList,
                 onSwipeUpDrag = { total, delta ->
+                    if (swipeUpSearchScreen) {
+                        // Held: short of the catch the screen only leans out, so there is a
+                        // pull to feel. Past it, it is let go and the rest of the drag is moot.
+                        if (!searchOpen) {
+                            searchVisible = true
+                            if (total >= searchCatchPx) {
+                                openSearch()
+                            } else {
+                                // Eased in, so the pull stiffens the further it goes: the
+                                // first stretch gives a little, the last barely moves at all.
+                                val t = total / searchCatchPx
+                                val lean = (1f - (1f - t) * (1f - t)) * SEARCH_LEAN
+                                scope.launch { searchAnim.snapTo(lean) }
+                            }
+                        }
+                        return@HomeScreen
+                    }
                     appListVisible = true
                     scope.launch { openAnim.snapTo(total.coerceAtMost(openDistancePx)) }
                     // Once it is all the way in the finger is usually still moving, so the
@@ -682,6 +780,12 @@ fun HomeRoute(
                     }
                 },
                 onSwipeUpEnd = { velocity ->
+                    if (swipeUpSearchScreen) {
+                        if (!searchOpen) {
+                            if (velocity < SEARCH_FLICK_VELOCITY) openSearch() else closeSearch()
+                        }
+                        return@HomeScreen
+                    }
                     scope.launch {
                         val settled = openAnim.value > openDistancePx * 0.4f || velocity < -1200f
                         if (settled) {
@@ -845,6 +949,57 @@ fun HomeRoute(
             )
         }
 
+        if (searchVisible) {
+            SearchScreen(
+                searchModel = searchModel,
+                nameOverrides = nameOverrides,
+                visible = searchVisible,
+                open = searchOpen,
+                progress = { searchAnim.value },
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                iconSizeDp = settings.iconSizeDp,
+                labelSizeSp = settings.labelSizeSp,
+                contentColor = settings.contentColor,
+                alignment = settings.appListAlignment,
+                iconSide = settings.iconSide,
+                shortcutSwipe = settings.shortcutSwipe,
+                favoritesEditable = settings.favoritesSource == FavoritesSource.MANUAL,
+                favoriteKeys = remember(favoriteKeys) { favoriteKeys.toSet() },
+                hiddenApps = hiddenApps,
+                statusBarHidden = settings.hideStatusBarAppList,
+                fieldAtBottom = settings.appListSearchBottom,
+                webSearchFallback = settings.webSearchFallback && webSearchAvailable,
+                onWebSearch = { term ->
+                    val intent = Intent(Intent.ACTION_WEB_SEARCH)
+                        .putExtra(SearchManager.QUERY, term)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    runCatching { context.startActivity(intent) }
+                    closeSearch()
+                },
+                onLaunch = { appInfo ->
+                    // Left up until we are backgrounded, for the same reason the list is.
+                    val acted = launchEntry(appInfo)
+                    if (acted && appInfo.kind == EntryKind.APP) closeAfterLaunch() else closeSearch()
+                },
+                onSetFavorite = { appInfo, add ->
+                    scope.launch {
+                        if (add) app.prefs.addFavorite(appInfo.key) else app.prefs.removeFavorite(appInfo.key)
+                    }
+                },
+                onSetName = { appInfo, name -> scope.launch { app.prefs.setNameOverride(appInfo.key, name) } },
+                onChangeIcon = { appInfo ->
+                    closeSearch(snap = true)
+                    onNavigate(iconPickerRoute(appInfo.key))
+                },
+                onAppInfo = { app.appRepository.openAppInfo(it) },
+                onUnpinShortcut = { appInfo -> closeSearch(); app.appRepository.unpin(appInfo) },
+                onHideApp = { appInfo, hide -> scope.launch { app.prefs.setHidden(appInfo.key, hide) } },
+                onMoveToFolder = { appInfo -> closeSearch(); folderPickerFor = appInfo },
+                onDismiss = { closeSearch() },
+            )
+        }
+
         // The band editor draws no letters of its own: the strip is what shows the range
         // being dragged, so it is given whether or not the always-on setting asked for it.
         // Edit layout is the other way round — its own controls sit where the strip does, and
@@ -922,7 +1077,7 @@ fun HomeRoute(
 
         // Edge zones sit on top of everything, so one unbroken touch opens the list and then
         // scrubs it as the finger moves.
-        if (!homeEditMode && !bandEditMode && appListQuery.isEmpty()) {
+        if (!homeEditMode && !bandEditMode && appListQuery.isEmpty() && !searchVisible) {
             val sides = remember(settings.edgeSide) {
                 when (settings.edgeSide) {
                     EdgeSide.LEFT -> listOf(EdgeSide.LEFT)

@@ -208,4 +208,6 @@
     <string name="now_playing_previous">Zurück</string>
     <string name="now_playing_play_pause">Wiedergabe/Pause</string>
     <string name="now_playing_next">Weiter</string>
+    <string name="settings_swipe_up_search_screen">Nach oben wischen öffnet die Suche</string>
+    <string name="settings_swipe_up_search_screen_detail">Nur ein Suchfeld mit Tastatur, ohne A-Z-Liste. Über den Widerstand ziehen, dann rastet sie ein</string>
 </resources>

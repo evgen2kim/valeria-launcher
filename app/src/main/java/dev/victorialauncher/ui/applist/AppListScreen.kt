@@ -143,7 +143,7 @@ private val IDLE_TOP_PADDING = 8.dp
 private val IDLE_BOTTOM_PADDING = 32.dp
 
 /** Smallest comfortable row, so a tap beside a small icon still lands on its app. */
-private val MIN_ROW_HEIGHT = 48.dp
+internal val MIN_ROW_HEIGHT = 48.dp
 
 /** How far rows are held back from the edge the A-Z strip occupies. */
 private val STRIP_INSET = 56.dp
@@ -157,7 +157,7 @@ private val SETTINGS_ROW_GAP = 20.dp
  * A name is a short thing; stretched over a tablet it leaves the row mostly empty and puts the
  * A-Z strip a hand's width from what it is scrubbing. A phone held upright never reaches this.
  */
-private val MAX_LIST_WIDTH = 600.dp
+internal val MAX_LIST_WIDTH = 600.dp
 
 /** How far the list dissolves at each end. */
 private val FADE_HEIGHT = 56.dp
@@ -168,7 +168,7 @@ private val FADE_HEIGHT = 56.dp
  * The idle gaps exist so a scrubbed letter can be placed on the scrub line. Search has no
  * scrub and no line, so results simply start where the list does.
  */
-private val SEARCH_EDGE_PADDING = 8.dp
+internal val SEARCH_EDGE_PADDING = 8.dp
 
 /** How far either end of the list may be dragged past its content. */
 private val MAX_EDGE_STRETCH = 40.dp
@@ -269,17 +269,7 @@ fun AppListScreen(
         if (!searching) {
             model
         } else {
-            val term = query.trim()
-            searchModel
-                .filtered { app ->
-                    displayName(app).contains(term, ignoreCase = true) ||
-                        // An app names itself in the language of the device, so on a Japanese
-                        // phone Settings calls itself 設定 and no amount of typing "settings"
-                        // reaches it. Package names are ASCII almost without exception, so the
-                        // English word is usually sitting right there in com.android.settings.
-                        app.componentName.packageName.contains(term, ignoreCase = true)
-                }
-                .rankedBy { searchRank(displayName(it), it.componentName.packageName, term) }
+            searchModel.searchFor(query, ::displayName)
         }
     }
     // Animated rather than switched, so an end does not snap from crisp to faded the moment
@@ -1346,7 +1336,7 @@ private fun SectionHeader(text: String, labelSizeSp: Int, contentColor: Color, a
 }
 
 @Composable
-private fun AppRow(
+internal fun AppRow(
     shortcutSwipe: ShortcutSwipe,
     /** False when the favorites are computed, so starring would write to a list nobody sees. */
     favoritesEditable: Boolean,
@@ -1529,7 +1519,7 @@ private fun AppRow(
 
 /** The app list's own search box, styled against the wallpaper rather than a surface. */
 @Composable
-private fun SearchField(
+internal fun SearchField(
     query: String,
     onQueryChange: (String) -> Unit,
     contentColor: Color,

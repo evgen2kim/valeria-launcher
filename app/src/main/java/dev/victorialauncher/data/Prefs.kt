@@ -172,6 +172,7 @@ class Prefs(private val context: Context) {
         val HOLD_SCROLL = booleanPreferencesKey("hold_scroll")
         val WEB_SEARCH_FALLBACK = booleanPreferencesKey("web_search_fallback")
         val SWIPE_UP_OPENS_SEARCH = booleanPreferencesKey("swipe_up_opens_search")
+        val SWIPE_UP_SEARCH_SCREEN = booleanPreferencesKey("swipe_up_search_screen")
         val HOLD_SCROLL_SPEED = intPreferencesKey("hold_scroll_speed")
         val ALIGNMENT = stringPreferencesKey("alignment")
         val APPLIST_ALIGNMENT = stringPreferencesKey("applist_alignment")
@@ -631,6 +632,14 @@ class Prefs(private val context: Context) {
     /** Whether swiping up puts the cursor in the search box rather than only opening the list. */
     val swipeUpOpensSearch: Flow<Boolean> =
         data.map { it[Keys.SWIPE_UP_OPENS_SEARCH] ?: false }.distinctUntilChanged()
+
+    /**
+     * Whether swiping up opens the search screen on its own — a field and its results, no A-Z
+     * list behind it — rather than the app list. Kept apart from [autoKeyboard] on purpose:
+     * that one also decides what a touch on the strip does, and this must not.
+     */
+    val swipeUpSearchScreen: Flow<Boolean> =
+        data.map { it[Keys.SWIPE_UP_SEARCH_SCREEN] ?: false }.distinctUntilChanged()
 
     /** Whether resting a finger on a letter walks the list on through that letter's apps. */
     val holdScroll: Flow<Boolean> =
@@ -1149,6 +1158,10 @@ class Prefs(private val context: Context) {
 
     suspend fun setSwipeUpOpensSearch(v: Boolean) {
         context.dataStore.edit { it[Keys.SWIPE_UP_OPENS_SEARCH] = v }
+    }
+
+    suspend fun setSwipeUpSearchScreen(v: Boolean) {
+        context.dataStore.edit { it[Keys.SWIPE_UP_SEARCH_SCREEN] = v }
     }
 
     suspend fun setHoldScroll(v: Boolean) {

@@ -154,6 +154,8 @@ fun SettingsScreen(
     onSetWebSearchFallback: (Boolean) -> Unit,
     swipeUpOpensSearch: Boolean,
     onSetSwipeUpOpensSearch: (Boolean) -> Unit,
+    swipeUpSearchScreen: Boolean,
+    onSetSwipeUpSearchScreen: (Boolean) -> Unit,
     holdScrollSpeed: Int,
     onSetHoldScrollSpeed: (Int) -> Unit,
     notificationBadges: Boolean,
@@ -483,7 +485,7 @@ fun SettingsScreen(
         },
         SettingsEntry(
             SettingsSection.APP_LIST, stringResource(R.string.settings_swipe_up_search), "swipe up search keyboard",
-            visible = swipeUpOpensList,
+            visible = swipeUpOpensList && !swipeUpSearchScreen,
         ) {
             SwitchRowWithDetail(
                 label = stringResource(R.string.settings_swipe_up_search),
@@ -570,6 +572,16 @@ fun SettingsScreen(
                 label = stringResource(R.string.settings_swipe_up_list),
                 detail = stringResource(R.string.settings_swipe_up_list_detail),
                 checked = swipeUpOpensList, onCheckedChange = onSetSwipeUpOpensList,
+            )
+        },
+        SettingsEntry(
+            SettingsSection.GESTURES, stringResource(R.string.settings_swipe_up_search_screen), "swipe up search keyboard",
+            visible = swipeUpOpensList,
+        ) {
+            SwitchRowWithDetail(
+                label = stringResource(R.string.settings_swipe_up_search_screen),
+                detail = stringResource(R.string.settings_swipe_up_search_screen_detail),
+                checked = swipeUpSearchScreen, onCheckedChange = onSetSwipeUpSearchScreen,
             )
         },
         SettingsEntry(SettingsSection.GESTURES, stringResource(R.string.settings_swipe_shortcuts), "swipe shortcuts") {
