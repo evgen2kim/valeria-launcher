@@ -60,6 +60,9 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.draw.alpha
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -114,6 +117,9 @@ import dev.victorialauncher.data.IconSide
 import dev.victorialauncher.data.HomePaddings
 import dev.victorialauncher.data.folderToken
 import dev.victorialauncher.data.PaddingSlot
+import dev.victorialauncher.data.VisibilityRule
+import dev.victorialauncher.ui.rules.RuleBadges
+import dev.victorialauncher.ui.rules.ruleSummary
 import dev.victorialauncher.media.NowPlayingWidget
 import dev.victorialauncher.media.openNowPlayingApp
 import dev.victorialauncher.service.HapticUtil
@@ -250,6 +256,19 @@ fun HomeScreen(
     /** True when the corner opens the app list's search rather than launching anything. */
     cornerButtonIsSearch: Boolean,
     onOpenCornerSearch: () -> Unit,
+    /** Every favorite's rule, for the menu line and the badges edit mode draws. */
+    visibilityRules: Map<String, VisibilityRule>,
+    /**
+     * What the rules keep off the home screen right now. [favorites] already leaves these out
+     * outside edit mode; edit mode lists everything and draws these faded, so a favorite can
+     * still be found, moved and given a different rule while it is away.
+     */
+    ruleHidden: Set<String>,
+    onEditVisibility: (token: String) -> Unit,
+    /** Whether the menu offers to bring rule-hidden favorites back until the screen goes off. */
+    revealAvailable: Boolean,
+    revealing: Boolean,
+    onToggleReveal: () -> Unit,
 ) {    fun displayName(app: AppInfo) = nameOverrides[app.key] ?: app.label
 
     var menuForKey by remember { mutableStateOf<String?>(null) }
@@ -898,6 +917,12 @@ fun HomeScreen(
                             onMemberUnpin = onUnpinShortcut,
                             onMemberEditIconName = { member -> renameDialogFor = member },
                             onOpenSettings = onOpenSettings,
+                            rule = visibilityRules[folderToken(item.folder.id)],
+                            dimmed = editMode && folderToken(item.folder.id) in ruleHidden,
+                            onEditVisibility = {
+                                folderMenuFor = null
+                                onEditVisibility(folderToken(item.folder.id))
+                            },
                         )
 
                         is HomeItem.Favorite -> FavoriteRow(
@@ -926,6 +951,9 @@ fun HomeScreen(
                             onRemove = { menuForKey = null; onRemoveFavorite(item.app) },
                             onEditIconName = { menuForKey = null; renameDialogFor = item.app },
                             onOpenSettings = { menuForKey = null; onOpenSettings() },
+                            rule = visibilityRules[item.app.key],
+                            dimmed = editMode && item.app.key in ruleHidden,
+                            onEditVisibility = { menuForKey = null; onEditVisibility(item.app.key) },
                         )
                     }
                 }
@@ -1038,6 +1066,15 @@ fun HomeScreen(
                 leadingIcon = { Icon(Icons.Filled.Checklist, contentDescription = null) },
                 onClick = { backgroundMenu = false; onManageFavorites() },
             )
+            if (revealAvailable) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(if (revealing) R.string.home_rehide else R.string.home_reveal_hidden)) },
+                    leadingIcon = {
+                        Icon(if (revealing) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, contentDescription = null)
+                    },
+                    onClick = { backgroundMenu = false; onToggleReveal() },
+                )
+            }
             HorizontalDivider()
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.action_open_settings)) },
@@ -1107,6 +1144,10 @@ private fun FavoriteRow(
     onRemove: () -> Unit,
     onEditIconName: () -> Unit,
     onOpenSettings: () -> Unit,
+    rule: VisibilityRule?,
+    /** Kept off the home screen by its rule right now; only ever true in edit mode. */
+    dimmed: Boolean,
+    onEditVisibility: () -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
@@ -1117,6 +1158,7 @@ private fun FavoriteRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .then(if (dimmed) Modifier.alpha(DIMMED_ALPHA) else Modifier)
                 .padding(horizontal = (sidePaddingDp - 8).coerceAtLeast(0).dp)
                 .background(
                     color = if (pressed) contentColor.copy(alpha = 0.15f) else Color.Transparent,
@@ -1158,16 +1200,17 @@ private fun FavoriteRow(
                 iconWidth = iconSizeDp.dp,
                 icon = { AppIcon(app = app, sizeDp = iconSizeDp) },
             ) { labelModifier ->
-                Text(
-                    label,
-                    // Same dimming a hidden app gets in the A-Z list: a shortcut its
-                    // publisher has switched off is still listed, but tapping it only
-                    // explains why it will not open.
-                    color = if (app.disabled) contentColor.copy(alpha = 0.5f) else contentColor,
-                    fontSize = labelSizeSp.sp,
-                    modifier = labelModifier,
-                    textAlign = alignment.textAlign(),
-                )
+                LabelWithRule(labelModifier, editMode, rule, alignment, contentColor, onEditVisibility) {
+                    Text(
+                        label,
+                        // Same dimming a hidden app gets in the A-Z list: a shortcut its
+                        // publisher has switched off is still listed, but tapping it only
+                        // explains why it will not open.
+                        color = if (app.disabled) contentColor.copy(alpha = 0.5f) else contentColor,
+                        fontSize = labelSizeSp.sp,
+                        textAlign = alignment.textAlign(),
+                    )
+                }
             }
         }
 
@@ -1224,6 +1267,7 @@ private fun FavoriteRow(
                 leadingIcon = { Icon(Icons.Filled.Tune, contentDescription = null) },
                 onClick = onEditIconName,
             )
+            ShowWhenMenuItem(rule, onEditVisibility)
             HorizontalDivider()
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.action_open_settings)) },
@@ -1268,6 +1312,10 @@ private fun FolderRow(
     onMemberUnpin: (AppInfo) -> Unit,
     onMemberEditIconName: (AppInfo) -> Unit,
     onOpenSettings: () -> Unit,
+    rule: VisibilityRule?,
+    /** Kept off the home screen by its rule right now; only ever true in edit mode. */
+    dimmed: Boolean,
+    onEditVisibility: () -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
@@ -1283,6 +1331,7 @@ private fun FolderRow(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .then(if (dimmed) Modifier.alpha(DIMMED_ALPHA) else Modifier)
                     .padding(horizontal = (sidePaddingDp - 8).coerceAtLeast(0).dp)
                     .background(
                         color = if (pressed) contentColor.copy(alpha = 0.15f) else Color.Transparent,
@@ -1319,13 +1368,14 @@ private fun FolderRow(
                     iconWidth = iconSizeDp.dp,
                     icon = { FolderIcon(members, iconSizeDp, contentColor, folder.icon) },
                 ) { labelModifier ->
-                    Text(
-                        folder.name,
-                        color = contentColor,
-                        fontSize = labelSizeSp.sp,
-                        modifier = labelModifier,
-                        textAlign = alignment.textAlign(),
-                    )
+                    LabelWithRule(labelModifier, editMode, rule, alignment, contentColor, onEditVisibility) {
+                        Text(
+                            folder.name,
+                            color = contentColor,
+                            fontSize = labelSizeSp.sp,
+                            textAlign = alignment.textAlign(),
+                        )
+                    }
                 }
             }
 
@@ -1349,6 +1399,7 @@ private fun FolderRow(
                     leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
                     onClick = onEdit,
                 )
+                ShowWhenMenuItem(rule, onEditVisibility)
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.action_edit_layout)) },
                     leadingIcon = { Icon(Icons.Filled.Tune, contentDescription = null) },
@@ -1651,6 +1702,59 @@ private fun HomeAlignment.wideScreenAlignment(): Alignment = when (this) {
     HomeAlignment.LEFT -> Alignment.TopStart
     HomeAlignment.CENTER -> Alignment.TopCenter
     HomeAlignment.RIGHT -> Alignment.TopEnd
+}
+
+/** How faint a favorite its rule is keeping away is drawn in edit mode. */
+private const val DIMMED_ALPHA = 0.4f
+
+/**
+ * A row's name, with its rule in badges underneath while the layout is being edited. Tapping
+ * the badges opens the rule, since the row itself takes no taps in edit mode.
+ */
+@Composable
+private fun LabelWithRule(
+    modifier: Modifier,
+    editMode: Boolean,
+    rule: VisibilityRule?,
+    alignment: HomeAlignment,
+    contentColor: Color,
+    onEditVisibility: () -> Unit,
+    label: @Composable () -> Unit,
+) {
+    if (!editMode || rule == null || !rule.isActive) {
+        Box(modifier) { label() }
+        return
+    }
+    Column(
+        modifier = modifier,
+        horizontalAlignment = when (alignment) {
+            HomeAlignment.LEFT -> Alignment.Start
+            HomeAlignment.CENTER -> Alignment.CenterHorizontally
+            HomeAlignment.RIGHT -> Alignment.End
+        },
+    ) {
+        label()
+        RuleBadges(rule, contentColor, Modifier.clickable(onClick = onEditVisibility))
+    }
+}
+
+/** "Show when…", with what the rule is now on the line under it. */
+@Composable
+private fun ShowWhenMenuItem(rule: VisibilityRule?, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = {
+            Column {
+                Text(stringResource(R.string.rule_menu_show_when))
+                Text(
+                    ruleSummary(rule),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+            }
+        },
+        leadingIcon = { Icon(Icons.Filled.Visibility, contentDescription = null) },
+        onClick = onClick,
+    )
 }
 
 /** The grab handle that reorders a row in edit mode. */

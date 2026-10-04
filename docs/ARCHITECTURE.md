@@ -16,6 +16,8 @@ data/
   Prefs.kt                      DataStore<Preferences>: every setting, hidden apps, favorites
   Folder.kt                     folder model + JSON persistence + favorites token encoding
   HomePaddings.kt               per-block top/bottom spacing set in edit mode
+  VisibilityRules.kt            per-favorite show/hide rules (Wi-Fi, time windows, headset), JVM-testable
+  ContextMonitor.kt             live Wi-Fi / clock / audio-output snapshot the rules are judged against
 ui/
   VictoriaNavHost.kt            collects settings once, hosts the navigation graph
   home/HomeRoute.kt             home destination: home screen, app-list overlay, edge zones
@@ -29,6 +31,7 @@ ui/
   common/AppIcon.kt             icon rasterisation and the bounded bitmap cache
   common/…                      shared dialogs, icon picker, touch-position modifier
   settings/…                    settings screen and the three picker screens
+  rules/…                       rule editor, its Wi-Fi / time / headset pickers, apply-to-others, overview
   theme/                        Material theme, font mapping, wallpaper-aware text color
 media/                          notification-listener service + Now Playing card
 service/                        haptics, status-bar fader, accessibility service, system UI
@@ -69,6 +72,19 @@ placed loses its layout and returns with its text collapsed.
 honors only 200dp of exclusion per side, so `HomeRoute` clips the excluded
 rectangle to the band the strip actually occupies.
 
+**Visibility rules hide a favorite only from the home screen.** The favorite stays in the
+stored list, in the A-Z list and in edit mode (drawn faded with badges), so it can always be
+found, launched or re-ruled. `HomeRoute` filters what it hands `HomeScreen` and recounts the
+widget's position among what is shown; edit mode gets the full list, which is why a drag can
+never write back an order with holes in it. A condition that cannot be answered — the Wi-Fi
+name withheld because location is off — never hides anything.
+
+**The rules are only evaluated while the launcher is started.** `ContextMonitor` registers its
+network, audio-device and time-tick callbacks on `ON_START` and drops them on `ON_STOP`, so
+nothing runs in the background and no background location is needed. The home screen sees
+only the derived set of hidden tokens, distinct-until-changed, so the per-minute clock tick
+does not recompose `VictoriaNavHost`.
+
 ## Recomposition
 
 Two deliberate choices keep scrubbing off the main thread's back:
@@ -94,6 +110,8 @@ The app requests **no `INTERNET` permission**. It cannot phone home.
 | `VIBRATE` | The haptic tick as the finger crosses a letter. Respects the system touch-feedback setting, and can be turned off in Settings. | No |
 | Accessibility service | The only sanctioned way to open the notification shade or lock the screen — neither has a public API. The service ignores every event it receives and reads nothing. | Yes — the swipe-down and double-tap-to-lock gestures simply report that they need it |
 | Notification listener | Reads the active media session for the Now Playing card. | Yes — off by default |
+| `ACCESS_FINE_LOCATION` (+ `ACCESS_COARSE_LOCATION`) | Android only reveals the connected Wi-Fi network's name, and the names of networks in range, to an app holding precise location. Used for visibility rules that follow a network; no position is ever read. Coarse is declared because Android 12+ requires both to be requested together. | Yes — requested only when a Wi-Fi condition is added; without it named-network conditions never hide anything |
+| `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_STATE` | Watch which Wi-Fi network is connected, and ask for a fresh scan when the network picker opens. Install-time, no prompt. | No |
 
 `BIND_APPWIDGET` is **not** requested: it is signature-level and is never granted to
 an ordinary app. `AppWidgetHost` and `bindAppWidgetIdIfAllowed` work without it for

@@ -3,6 +3,7 @@ package dev.victorialauncher
 
 import android.app.Application
 import dev.victorialauncher.data.AppRepository
+import dev.victorialauncher.data.ContextMonitor
 import dev.victorialauncher.data.IconPackRepository
 import dev.victorialauncher.data.CrashLog
 import dev.victorialauncher.data.Prefs
@@ -22,6 +23,8 @@ class VictoriaApp : Application() {
         private set
     lateinit var widgetHost: VictoriaAppWidgetHost
         private set
+    lateinit var contextMonitor: ContextMonitor
+        private set
 
     /** Outlives any screen, for work that must finish even as the launcher is left behind. */
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -34,6 +37,7 @@ class VictoriaApp : Application() {
         appRepository = AppRepository(this, prefs, appScope)
         iconPackRepository = IconPackRepository(this)
         widgetHost = VictoriaAppWidgetHost(this, HOST_ID)
+        contextMonitor = ContextMonitor(this, prefs, appScope)
         // Nothing else keeps the clock widget's battery line current; see the object.
         ClockWidgetBattery.watch(this)
     }

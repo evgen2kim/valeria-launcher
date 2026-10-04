@@ -92,6 +92,17 @@ class PrivateSpaceExportTest {
     }
 
     @Test
+    fun `a visibility rule for a private app is removed, other rules survive`() {
+        val rules = mapOf(
+            a to VisibilityRule(wifi = listOf("Office")),
+            bPrivate to VisibilityRule(anyWifi = true),
+            "folder:1" to VisibilityRule(headset = HeadsetCondition.Any),
+        )
+        val stripped = stripPrivateSpaceFromExport("visibility_rules_json", visibilityRulesToJson(rules), strip)
+        assertEquals(rules - bPrivate, visibilityRulesFromJson(stripped as String))
+    }
+
+    @Test
     fun `a map with no private key comes back identical`() {
         val raw = """{"$a":"Alpha","$c":"Charlie"}"""
         assertSame(raw, stripPrivateSpaceFromExport("name_overrides_json", raw, strip))

@@ -330,4 +330,122 @@
         <item quantity="one">%1$d notification</item>
         <item quantity="other">%1$d notifications</item>
     </plurals>
+
+    <!-- Visibility rules: when a favorite is on the home screen -->
+    <string name="rule_menu_show_when">Show when…</string>
+    <string name="rule_title">Show when</string>
+    <string name="rule_mode_always">Always</string>
+    <string name="rule_mode_only_when">Only when</string>
+    <string name="rule_mode_hide_when">Hide when</string>
+    <string name="rule_object_detail">On the home screen</string>
+    <string name="rule_section_wifi">Wi-Fi · any of</string>
+    <string name="rule_section_time">Time · any of</string>
+    <string name="rule_section_headset">Headset</string>
+    <string name="rule_add_network">Network</string>
+    <string name="rule_add_window">Add window</string>
+    <string name="rule_not_used">Not used</string>
+    <string name="rule_tap_to_add">Tap to add</string>
+    <string name="rule_remove_condition">Remove</string>
+    <string name="rule_apply_to_others">Apply to others…</string>
+    <string name="rule_empty_hint">Add a condition below. Until there is one, this stays on the home screen as usual.</string>
+    <string name="rule_always_hint">Shown all the time. Any conditions set before are kept in case you switch back.</string>
+    <string name="rule_status_shown">Met now — on the home screen</string>
+    <string name="rule_status_hidden">Not met now — hidden from the home screen</string>
+    <string name="rule_status_hidden_by_hide">Met now — hidden from the home screen</string>
+    <string name="rule_status_shown_by_hide">Not met now — on the home screen</string>
+    <string name="rule_status_disabled">Visibility rules are switched off in Settings</string>
+    <string name="rule_sentence_only">Show when %1$s</string>
+    <string name="rule_sentence_hide">Hide when %1$s</string>
+    <string name="rule_join_or">%1$s or %2$s</string>
+    <string name="rule_join_and">%1$s and %2$s</string>
+    <string name="rule_part_any_wifi">connected to any Wi-Fi</string>
+    <string name="rule_part_wifi">connected to %1$s</string>
+    <string name="rule_part_headset_any">a headset is connected</string>
+    <string name="rule_part_headset_wireless">wireless headphones are connected</string>
+    <string name="rule_part_headset_named">%1$s is connected</string>
+    <string name="rule_kind_wifi">Wi-Fi</string>
+    <string name="rule_kind_time">Time</string>
+    <string name="rule_kind_headset">Headset</string>
+    <string name="rule_summary_only">Only when: %1$s</string>
+    <string name="rule_summary_hide">Hide when: %1$s</string>
+    <string name="rule_badge_any_wifi">any Wi-Fi</string>
+    <string name="rule_badge_headset">headset</string>
+    <string name="rule_badge_wireless">wireless</string>
+    <string name="rule_days_every">Every day</string>
+    <string name="rule_days_range">%1$s–%2$s</string>
+    <string name="rule_days_none">No days</string>
+    <string name="rule_window_time">%1$s, %2$s–%3$s</string>
+    <string name="rule_window_all_day">%1$s, all day</string>
+
+    <string name="rule_time_title">Time</string>
+    <string name="rule_window_title">Window %1$d</string>
+    <string name="rule_window_from">From</string>
+    <string name="rule_window_to">To</string>
+    <string name="rule_window_next_day">next day</string>
+    <string name="rule_window_delete">Delete window</string>
+
+    <string name="wifi_title">Wi-Fi networks</string>
+    <string name="wifi_any">Any Wi-Fi network</string>
+    <string name="wifi_any_detail">Connected to Wi-Fi at all. Use “Hide when” for mobile data only.</string>
+    <string name="wifi_connected_now">Connected now</string>
+    <string name="wifi_nearby">Nearby</string>
+    <string name="wifi_other">Other</string>
+    <string name="wifi_enter_name">Enter network name</string>
+    <string name="wifi_name_hint">Network name (SSID)</string>
+    <string name="wifi_manual_detail">Not in range now</string>
+    <string name="wifi_tag_now">now</string>
+    <string name="wifi_scan_again">Scan again</string>
+    <string name="wifi_none_nearby">No networks found nearby</string>
+    <string name="wifi_not_connected">Not connected to Wi-Fi</string>
+    <string name="wifi_name_unavailable">Connected, name unavailable</string>
+    <string name="wifi_tip">Networks are matched by name, case-sensitive. Android does not share your saved networks with apps, so one out of range can be typed in.</string>
+    <string name="wifi_perm_title">To read Wi-Fi network names</string>
+    <string name="wifi_perm_body">Android only tells apps the name of a Wi-Fi network while they hold precise location permission.
+
+The launcher reads only the network name, and only while it is on screen. It never reads your position, and it has no internet access.</string>
+    <string name="wifi_perm_note">Without it, conditions on a named network can’t be checked. “Any Wi-Fi network” and the other conditions still work.</string>
+    <string name="wifi_perm_continue">Continue</string>
+    <string name="wifi_perm_not_now">Not now</string>
+    <string name="wifi_perm_banner_none">Location permission is needed to see network names.</string>
+    <string name="wifi_perm_banner_approx">Precise location is needed — approximate is not enough to see network names.</string>
+    <string name="wifi_perm_banner_off">Location is switched off, so Android hides network names.</string>
+    <string name="wifi_perm_grant">Grant</string>
+    <string name="wifi_perm_open_settings">Open settings</string>
+    <string name="wifi_location_turn_on">Turn on</string>
+
+    <string name="headset_title">Headset</string>
+    <string name="headset_any">Any headset</string>
+    <string name="headset_any_detail">Wired, USB or Bluetooth</string>
+    <string name="headset_wireless">Any wireless</string>
+    <string name="headset_wireless_detail">Bluetooth speakers count too</string>
+    <string name="headset_named">Specific devices</string>
+    <string name="headset_connected_now">Connected now</string>
+    <string name="headset_seen_before">Seen before</string>
+    <string name="headset_none_seen">No headsets seen yet. Connect one and it will appear here.</string>
+    <string name="headset_tip">Devices are matched by name. To add a new one, connect it once.</string>
+    <string name="headset_kind_wireless">Bluetooth</string>
+    <string name="headset_kind_wired">Wired</string>
+    <string name="headset_unnamed">Unnamed device</string>
+
+    <string name="apply_title">Apply to others</string>
+    <string name="apply_detail">Give these favorites the same rule. Any rule they had is replaced.</string>
+    <string name="apply_confirm">Apply</string>
+    <string name="apply_done">Rule applied to %1$d</string>
+    <string name="apply_has_rule">Has its own rule</string>
+
+    <string name="rules_title">Visibility rules</string>
+    <string name="rules_enabled">Use visibility rules</string>
+    <string name="rules_enabled_detail">Off puts every favorite back on the home screen and keeps the rules for later.</string>
+    <string name="rules_now">Right now</string>
+    <string name="rules_list">Favorites with a rule</string>
+    <string name="rules_none">No favorite has a rule yet. Long-press a favorite on the home screen and pick “Show when…”.</string>
+    <string name="rules_shown">Shown</string>
+    <string name="rules_hidden">Hidden</string>
+    <string name="rules_now_no_headset">No headset connected</string>
+    <string name="settings_rules">Visibility rules</string>
+    <string name="settings_rules_none">Show favorites by Wi-Fi, time or headset</string>
+    <string name="settings_rules_count">%1$d set</string>
+
+    <string name="home_reveal_hidden">Show hidden for now</string>
+    <string name="home_rehide">Hide again</string>
 </resources>

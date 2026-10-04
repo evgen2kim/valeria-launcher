@@ -222,6 +222,9 @@ fun SettingsScreen(
     onOpenAppInfo: () -> Unit,
     onOpenHiddenApps: () -> Unit,
     onOpenFavorites: () -> Unit,
+    /** How many favorites have a visibility rule, for the line under the entry. */
+    visibilityRuleCount: Int,
+    onOpenVisibilityRules: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -693,6 +696,14 @@ fun SettingsScreen(
                 label = stringResource(R.string.settings_favorites),
                 detail = stringResource(R.string.settings_favorites_detail),
                 onClick = onOpenFavorites,
+            )
+        },
+        SettingsEntry(SettingsSection.APPS, stringResource(R.string.settings_rules), "wifi time schedule headset headphones conditional context show hide") {
+            BackupRow(
+                label = stringResource(R.string.settings_rules),
+                detail = if (visibilityRuleCount == 0) stringResource(R.string.settings_rules_none)
+                    else stringResource(R.string.settings_rules_count, visibilityRuleCount),
+                onClick = onOpenVisibilityRules,
             )
         },
         SettingsEntry(SettingsSection.APPS, stringResource(R.string.settings_hidden_apps), "hide") {

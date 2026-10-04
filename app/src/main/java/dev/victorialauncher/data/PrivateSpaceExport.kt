@@ -26,6 +26,7 @@ internal const val PREF_ICON_OVERRIDES = "icon_overrides_json"
 internal const val PREF_LAUNCH_COUNTS = "launch_counts_json"
 internal const val PREF_QUICK_LAUNCH_LEFT = "quick_launch_left_key"
 internal const val PREF_QUICK_LAUNCH_RIGHT = "quick_launch_right_key"
+internal const val PREF_VISIBILITY_RULES = "visibility_rules_json"
 
 /**
  * Strips every second profile's keys out of one stored preference's value, given the DataStore
@@ -64,7 +65,7 @@ fun stripPrivateSpaceFromExport(name: String, value: Any, stripOtherProfiles: Bo
         PREF_FAVORITES -> (value as? String)?.let { stripNewlineList(it, isPrivate) } ?: value
         PREF_HIDDEN_APPS -> (value as? Set<*>)?.let { stripStringSet(it, isPrivate) } ?: value
         PREF_FOLDERS -> (value as? String)?.let { stripFoldersJson(it, isPrivate) } ?: value
-        PREF_NAME_OVERRIDES, PREF_ICON_OVERRIDES, PREF_LAUNCH_COUNTS ->
+        PREF_NAME_OVERRIDES, PREF_ICON_OVERRIDES, PREF_LAUNCH_COUNTS, PREF_VISIBILITY_RULES ->
             (value as? String)?.let { stripJsonMap(it, isPrivate) } ?: value
         PREF_QUICK_LAUNCH_LEFT, PREF_QUICK_LAUNCH_RIGHT -> {
             // Not `?.let { ... } ?: value`: that Elvis would mistake the deliberate null this
@@ -117,8 +118,8 @@ private fun stripFoldersJson(raw: String, isPrivate: (String) -> Boolean): Strin
 }
 
 /**
- * Name overrides, icon overrides and launch counts are all a JSON object keyed by app key; this
- * drops the entries whose key belongs to a second profile.
+ * Name overrides, icon overrides, launch counts and visibility rules are all a JSON object keyed
+ * by app key; this drops the entries whose key belongs to a second profile.
  */
 private fun stripJsonMap(raw: String, isPrivate: (String) -> Boolean): String {
     val obj = runCatching { JSONObject(raw) }.getOrNull() ?: return raw

@@ -99,6 +99,9 @@ class Prefs(private val context: Context) {
         val FOLDERS = stringPreferencesKey(PREF_FOLDERS)
         val NAME_OVERRIDES = stringPreferencesKey(PREF_NAME_OVERRIDES)
         val ICON_OVERRIDES = stringPreferencesKey(PREF_ICON_OVERRIDES)
+        val VISIBILITY_RULES = stringPreferencesKey(PREF_VISIBILITY_RULES)
+        val VISIBILITY_RULES_ENABLED = booleanPreferencesKey("visibility_rules_enabled")
+        val SEEN_AUDIO_DEVICES = stringPreferencesKey("seen_audio_devices_json")
         val ICON_SIZE_DP = intPreferencesKey("icon_size_dp")
         val LABEL_SIZE_SP = intPreferencesKey("label_size_sp")
         val ITEM_SPACING_DP = intPreferencesKey("item_spacing_dp")
@@ -324,6 +327,18 @@ class Prefs(private val context: Context) {
 
     val iconOverrides: Flow<Map<String, String>> =
         data.map { pref -> jsonToMap(pref[Keys.ICON_OVERRIDES]) }.distinctUntilChanged()
+
+    /** Per-favorite visibility rules, keyed like renames: an app key or a folder token. */
+    val visibilityRules: Flow<Map<String, VisibilityRule>> =
+        data.map { pref -> visibilityRulesFromJson(pref[Keys.VISIBILITY_RULES]) }.distinctUntilChanged()
+
+    /** One switch for every rule at once, so they can be set aside without being lost. */
+    val visibilityRulesEnabled: Flow<Boolean> =
+        data.map { it[Keys.VISIBILITY_RULES_ENABLED] ?: true }.distinctUntilChanged()
+
+    /** Headsets seen connected before, so one can be picked while it is not. */
+    val seenAudioDevices: Flow<List<SeenAudioDevice>> =
+        data.map { pref -> seenAudioDevicesFromJson(pref[Keys.SEEN_AUDIO_DEVICES]) }.distinctUntilChanged()
 
     val iconSizeDp: Flow<Int> = data.map { it[Keys.ICON_SIZE_DP] ?: 56 }.distinctUntilChanged()
 
@@ -740,6 +755,9 @@ class Prefs(private val context: Context) {
             val counts = jsonToMap(pref[Keys.LAUNCH_COUNTS])
             if (componentKey in counts) pref[Keys.LAUNCH_COUNTS] = mapToJson(counts - componentKey)
 
+            val rules = visibilityRulesFromJson(pref[Keys.VISIBILITY_RULES])
+            if (componentKey in rules) pref[Keys.VISIBILITY_RULES] = visibilityRulesToJson(rules - componentKey)
+
             // A quick-launch slot that still points at this key would otherwise swipe to
             // nothing once the row is gone for good.
             if (pref[Keys.CORNER_BUTTON_KEY] == componentKey) pref.remove(Keys.CORNER_BUTTON_KEY)
@@ -766,6 +784,9 @@ class Prefs(private val context: Context) {
         context.dataStore.edit { pref ->
             pref[Keys.FOLDERS] = foldersToJson(foldersFromJson(pref[Keys.FOLDERS]).filterNot { it.id == id })
             pref.writeFavorites(readFavorites(pref).filterNot { it == folderToken(id) })
+            // A folder id is never reused, so a rule left behind would only ever be clutter.
+            val rules = visibilityRulesFromJson(pref[Keys.VISIBILITY_RULES])
+            if (folderToken(id) in rules) pref[Keys.VISIBILITY_RULES] = visibilityRulesToJson(rules - folderToken(id))
         }
     }
 
@@ -817,6 +838,44 @@ class Prefs(private val context: Context) {
             val map = jsonToMap(pref[Keys.NAME_OVERRIDES]).toMutableMap()
             if (name.isNullOrBlank()) map.remove(componentKey) else map[componentKey] = name
             pref[Keys.NAME_OVERRIDES] = mapToJson(map)
+        }
+    }
+
+    /**
+     * Null clears it, and so does "Only when" with no conditions, which is exactly how the
+     * editor shows a favorite with no rule. Any other mode is kept even before it has a
+     * condition, or picking it first would not stay picked.
+     */
+    suspend fun setVisibilityRule(key: String, rule: VisibilityRule?) {
+        setVisibilityRules(listOf(key), rule)
+    }
+
+    /** The same rule on every one of [keys], in one write: what "Apply to others" does. */
+    suspend fun setVisibilityRules(keys: Collection<String>, rule: VisibilityRule?) {
+        context.dataStore.edit { pref ->
+            val map = visibilityRulesFromJson(pref[Keys.VISIBILITY_RULES]).toMutableMap()
+            keys.forEach { key ->
+                if (rule == null || (!rule.hasConditions && rule.mode == VisibilityMode.ONLY_WHEN)) {
+                    map.remove(key)
+                } else {
+                    map[key] = rule
+                }
+            }
+            pref[Keys.VISIBILITY_RULES] = visibilityRulesToJson(map)
+        }
+    }
+
+    suspend fun setVisibilityRulesEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.VISIBILITY_RULES_ENABLED] = enabled }
+    }
+
+    /** Remembers [outputs]; writes nothing when they were all seen already today. */
+    suspend fun recordAudioOutputs(outputs: List<AudioOutput>, nowMillis: Long) {
+        if (outputs.isEmpty()) return
+        context.dataStore.edit { pref ->
+            val seen = seenAudioDevicesFromJson(pref[Keys.SEEN_AUDIO_DEVICES])
+            val merged = mergeSeenAudioDevices(seen, outputs, nowMillis)
+            if (merged !== seen) pref[Keys.SEEN_AUDIO_DEVICES] = seenAudioDevicesToJson(merged)
         }
     }
 

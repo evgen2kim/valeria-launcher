@@ -2,7 +2,12 @@
 package dev.victorialauncher.ui.home
 
 import android.app.SearchManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
+import dev.victorialauncher.data.VisibilityRule
 import android.graphics.Rect
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -160,6 +165,10 @@ fun HomeRoute(
     /** Locks an open private space or asks for a locked one to be opened, off this thread. */
     onTogglePrivateSpace: () -> Unit,
     onNavigate: (String) -> Unit,
+    visibilityRules: Map<String, VisibilityRule>,
+    /** Favorite tokens the rules keep off the home screen right now. */
+    ruleHidden: Set<String>,
+    onEditVisibility: (token: String) -> Unit,
 ) {
     val context = LocalContext.current
     // Asked once: whether anything on this phone handles a web search at all.
@@ -239,6 +248,38 @@ fun HomeRoute(
     }
     var homeEditMode by remember { mutableStateOf(false) }
     var folderPickerFor by remember { mutableStateOf<AppInfo?>(null) }
+
+    // "Show hidden for now" lasts until the screen goes off. Leaving the launcher is not the
+    // moment to undo it: the point is usually to open one of the apps it brought back.
+    var revealRuleHidden by remember { mutableStateOf(false) }
+    DisposableEffect(context) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(c: Context, intent: Intent) {
+                revealRuleHidden = false
+            }
+        }
+        ContextCompat.registerReceiver(
+            context,
+            receiver,
+            IntentFilter(Intent.ACTION_SCREEN_OFF),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        onDispose { context.unregisterReceiver(receiver) }
+    }
+    val hiddenNow = remember(favorites, ruleHidden) { favorites.filter { it.token in ruleHidden }.map { it.token }.toSet() }
+    // Edit mode lists everything, faded where a rule has it away, so the order being edited is
+    // the whole order and nothing can be dragged past a row that is not there.
+    val filterByRules = hiddenNow.isNotEmpty() && !homeEditMode && !revealRuleHidden
+    val shownFavorites = remember(favorites, hiddenNow, filterByRules) {
+        if (filterByRules) favorites.filterNot { it.token in hiddenNow } else favorites
+    }
+    // The widget sits at an index into the full list; counted again among what is shown, so it
+    // stays below the same favorites rather than sliding down by however many are away.
+    val shownWidgetPosition = if (filterByRules) {
+        favorites.take(widgetPosition).count { it.token !in hiddenNow }
+    } else {
+        widgetPosition
+    }
 
     val nowPlaying by NowPlayingBus.state.collectAsState()
     val listenerGranted = remember(homeIntentTick) { isListenerEnabled(context) }
@@ -552,7 +593,7 @@ fun HomeRoute(
                 },
                 favoritesReorderable = settings.favoritesSource == FavoritesSource.MANUAL,
                 shortcutSwipe = settings.shortcutSwipe,
-                favorites = favorites,
+                favorites = shownFavorites,
                 nameOverrides = nameOverrides,
                 iconSizeDp = settings.iconSizeDp,
                 labelSizeSp = settings.labelSizeSp,
@@ -565,7 +606,7 @@ fun HomeRoute(
                 onSetWidgetOffsetX = { scope.launch { app.prefs.setWidgetOffsetXDp(it) } },
                 paddings = homePaddings,
                 widgetIds = widgetIds,
-                widgetPosition = widgetPosition,
+                widgetPosition = shownWidgetPosition,
                 widgetHeightDp = widgetHeightDp,
                 hapticsEnabled = settings.hapticsEnabled,
                 nowPlayingEnabled = settings.nowPlayingEnabled,
@@ -711,6 +752,12 @@ fun HomeRoute(
                 onAppInfo = { app.appRepository.openAppInfo(it) },
                 onUnpinShortcut = { app.appRepository.unpin(it) },
                 onOpenSettings = { onNavigate("settings") },
+                visibilityRules = visibilityRules,
+                ruleHidden = hiddenNow,
+                onEditVisibility = onEditVisibility,
+                revealAvailable = hiddenNow.isNotEmpty() || revealRuleHidden,
+                revealing = revealRuleHidden,
+                onToggleReveal = { revealRuleHidden = !revealRuleHidden },
             )
         }
 

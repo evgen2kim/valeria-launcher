@@ -17,6 +17,17 @@
          and the space can never be unlocked from here. Granted at install time, no prompt,
          and it only takes effect while this launcher holds the home role. -->
     <uses-permission android:name="android.permission.ACCESS_HIDDEN_PROFILES" />
+    <!-- Visibility rules that follow a Wi-Fi network. Android only tells an app the connected
+         network's name, or the names of networks nearby, while it holds precise location —
+         nothing here reads a position. Asked for only when someone adds a Wi-Fi condition,
+         and only used while the launcher is on screen, so background location is never
+         requested. Coarse is declared beside it because Android 12+ requires both. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Asks for a fresh scan when the network picker opens. Granted at install, no prompt. -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
     <application
         android:name=".VictoriaApp"

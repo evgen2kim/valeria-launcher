@@ -74,6 +74,24 @@ import dev.victorialauncher.ui.settings.FolderAppsScreen
 import dev.victorialauncher.ui.settings.HiddenAppsScreen
 import dev.victorialauncher.ui.settings.ManageFavoritesScreen
 import dev.victorialauncher.ui.settings.SettingsScreen
+import dev.victorialauncher.ui.rules.ApplyRuleScreen
+import dev.victorialauncher.ui.rules.HeadsetPickerScreen
+import dev.victorialauncher.ui.rules.RuleTarget
+import dev.victorialauncher.ui.rules.RulesOverviewScreen
+import dev.victorialauncher.ui.rules.TimeWindowsScreen
+import dev.victorialauncher.ui.rules.VisibilityRuleScreen
+import dev.victorialauncher.ui.rules.WifiPickerScreen
+import dev.victorialauncher.ui.common.AppIcon
+import dev.victorialauncher.data.TimeWindow
+import dev.victorialauncher.data.VisibilityRule
+import dev.victorialauncher.data.hiddenByRules
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Modifier
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import dev.victorialauncher.ui.theme.rememberContentColor
 import dev.victorialauncher.widget.ClockWidgetProvider
 import dev.victorialauncher.widget.WidgetPickerActivity
@@ -337,6 +355,36 @@ fun VictoriaNavHost(
     val iconSide by app.prefs.iconSide.collectAsState(initial = IconSide.LEFT)
     val statusBarPeekSeconds by app.prefs.statusBarPeekSeconds.collectAsState(initial = 5)
     val scrubBand by app.prefs.scrubBand.collectAsState(initial = null)
+    val visibilityRules by app.prefs.visibilityRules.collectAsState(initial = emptyMap())
+    val visibilityRulesEnabled by app.prefs.visibilityRulesEnabled.collectAsState(initial = true)
+    val seenAudioDevices by app.prefs.seenAudioDevices.collectAsState(initial = emptyList())
+    // Narrowed to the one answer the home screen needs and only passed on when it changes, so
+    // the clock ticking over every minute does not recompose everything collected above.
+    val ruleHidden by remember {
+        combine(app.prefs.visibilityRules, app.prefs.visibilityRulesEnabled, app.contextMonitor.snapshot) { rules, enabled, now ->
+            if (enabled) hiddenByRules(rules, now) else emptySet()
+        }.distinctUntilChanged()
+    }.collectAsState(initial = emptySet())
+
+    // Rules are only ever read by a screen that is showing, so the sources behind them are only
+    // listened to while the launcher is started.
+    DisposableEffect(lifecycleOwner) {
+        var running = false
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START && !running) {
+                running = true
+                app.contextMonitor.start()
+            } else if (event == Lifecycle.Event.ON_STOP && running) {
+                running = false
+                app.contextMonitor.stop()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            if (running) app.contextMonitor.stop()
+        }
+    }
     val layoutDefaultsVersion by app.prefs.layoutDefaultsVersion.collectAsState(initial = null)
 
     // A brand new launcher gets its own clock, so the home screen is not simply empty on first
@@ -369,6 +417,8 @@ fun VictoriaNavHost(
     // Counting the stored set in the subtitle says out loud how many apps are in there.
     val hiddenShownCount = remember(allApps, hiddenApps) { allApps.count { it.key in hiddenApps } }
     val foldersById = remember(folders) { folders.associateBy { it.id } }
+
+    fun ruleRoute(key: String, suffix: String = "") = "rule/" + Uri.encode(key) + suffix
 
     // A favorites row is an app or a folder; both come out of the same ordered token list.
     //
@@ -404,6 +454,21 @@ fun VictoriaNavHost(
                     foldersById[folderId]?.let { FavoriteEntry.FolderRef(it) }
                 } else {
                     appsByKey[token]?.let { FavoriteEntry.App(it) }
+                }
+            }
+        }
+    }
+
+    // The favorites as the rule screens list them, in home-screen order.
+    val folderTint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+    val ruleTargets = remember(favoriteEntries, nameOverrides, iconSizeDp, folderTint) {
+        favoriteEntries.map { entry ->
+            when (entry) {
+                is FavoriteEntry.App -> RuleTarget(entry.token, nameOverrides[entry.app.key] ?: entry.app.label) {
+                    AppIcon(app = entry.app, sizeDp = minOf(iconSizeDp, 40))
+                }
+                is FavoriteEntry.FolderRef -> RuleTarget(entry.token, entry.folder.name) {
+                    Icon(Icons.Filled.Folder, contentDescription = null, tint = folderTint, modifier = Modifier.size(minOf(iconSizeDp, 40).dp))
                 }
             }
         }
@@ -647,6 +712,9 @@ fun VictoriaNavHost(
                     }
                 },
                 onNavigate = { route -> navController.navigate(route) },
+                visibilityRules = visibilityRules,
+                ruleHidden = ruleHidden,
+                onEditVisibility = { token -> navController.navigate(ruleRoute(token)) },
             )
         }
 
@@ -825,6 +893,10 @@ fun VictoriaNavHost(
                 },
                 onOpenHiddenApps = { navController.navigate("settings/hidden") },
                 onOpenFavorites = { navController.navigate("favorites") },
+                visibilityRuleCount = remember(visibilityRules, ruleTargets) {
+                    ruleTargets.count { visibilityRules[it.key]?.hasConditions == true }
+                },
+                onOpenVisibilityRules = { navController.navigate("rules") },
                 onOpenNotificationSettings = {
                     context.startActivity(
                         Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
@@ -931,6 +1003,97 @@ fun VictoriaNavHost(
                 iconSizeDp = iconSizeDp,
                 onToggleHidden = { appInfo, hidden ->
                     scope.launch { app.prefs.setHidden(appInfo.key, hidden) }
+                },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable("rules") {
+            val snapshot by app.contextMonitor.snapshot.collectAsState()
+            RulesOverviewScreen(
+                enabled = visibilityRulesEnabled,
+                onSetEnabled = { scope.launch { app.prefs.setVisibilityRulesEnabled(it) } },
+                snapshot = snapshot,
+                wifiAccess = remember(snapshot) { app.contextMonitor.wifiNameAccess() },
+                targets = ruleTargets,
+                rules = visibilityRules,
+                onEdit = { key -> navController.navigate(ruleRoute(key)) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable("rule/{key}") { entry ->
+            val key = entry.arguments?.getString("key")?.let { Uri.decode(it) }.orEmpty()
+            val snapshot by app.contextMonitor.snapshot.collectAsState()
+            val rule = visibilityRules[key]
+            val target = ruleTargets.firstOrNull { it.key == key }
+            val folder = folderIdFromToken(key)?.let { foldersById[it] }
+            VisibilityRuleScreen(
+                name = target?.name ?: folder?.name ?: appsByKey[key]?.let { nameOverrides[it.key] ?: it.label }.orEmpty(),
+                icon = { target?.icon?.invoke() ?: appsByKey[key]?.let { AppIcon(app = it, sizeDp = 40) } },
+                rule = rule,
+                snapshot = snapshot,
+                rulesEnabled = visibilityRulesEnabled,
+                wifiAccess = remember(snapshot) { app.contextMonitor.wifiNameAccess() },
+                onChange = { scope.launch { app.prefs.setVisibilityRule(key, it) } },
+                onOpenWifi = { navController.navigate(ruleRoute(key, "/wifi")) },
+                onOpenTime = { navController.navigate(ruleRoute(key, "/time")) },
+                onAddWindow = {
+                    val current = rule ?: VisibilityRule()
+                    scope.launch { app.prefs.setVisibilityRule(key, current.copy(windows = current.windows + TimeWindow.DEFAULT)) }
+                    navController.navigate(ruleRoute(key, "/time"))
+                },
+                onOpenHeadset = { navController.navigate(ruleRoute(key, "/headset")) },
+                onApplyToOthers = { navController.navigate(ruleRoute(key, "/apply")) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable("rule/{key}/wifi") { entry ->
+            val key = entry.arguments?.getString("key")?.let { Uri.decode(it) }.orEmpty()
+            val snapshot by app.contextMonitor.snapshot.collectAsState()
+            WifiPickerScreen(
+                rule = visibilityRules[key],
+                snapshot = snapshot,
+                readAccess = { app.contextMonitor.wifiNameAccess() },
+                onAccessChanged = { app.contextMonitor.refreshWifi() },
+                onChange = { scope.launch { app.prefs.setVisibilityRule(key, it) } },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable("rule/{key}/time") { entry ->
+            val key = entry.arguments?.getString("key")?.let { Uri.decode(it) }.orEmpty()
+            TimeWindowsScreen(
+                rule = visibilityRules[key],
+                onChange = { scope.launch { app.prefs.setVisibilityRule(key, it) } },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable("rule/{key}/headset") { entry ->
+            val key = entry.arguments?.getString("key")?.let { Uri.decode(it) }.orEmpty()
+            val snapshot by app.contextMonitor.snapshot.collectAsState()
+            HeadsetPickerScreen(
+                rule = visibilityRules[key],
+                snapshot = snapshot,
+                seenDevices = seenAudioDevices,
+                onChange = { scope.launch { app.prefs.setVisibilityRule(key, it) } },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable("rule/{key}/apply") { entry ->
+            val key = entry.arguments?.getString("key")?.let { Uri.decode(it) }.orEmpty()
+            ApplyRuleScreen(
+                sourceKey = key,
+                targets = ruleTargets,
+                rules = visibilityRules,
+                onApply = { keys ->
+                    val rule = visibilityRules[key]
+                    scope.launch { app.prefs.setVisibilityRules(keys, rule) }
+                    Toast.makeText(context, context.getString(R.string.apply_done, keys.size), Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
                 },
                 onBack = { navController.popBackStack() },
             )
