@@ -83,6 +83,7 @@ import dev.victorialauncher.BuildConfig
 import dev.victorialauncher.data.AppFont
 import dev.victorialauncher.data.AppInfo
 import dev.victorialauncher.data.AzStripVisibility
+import dev.victorialauncher.data.STRIP_INSET_RANGE
 import dev.victorialauncher.data.IconShape
 import dev.victorialauncher.data.EdgeSide
 import dev.victorialauncher.data.HOLD_SCROLL_RANGE
@@ -194,8 +195,10 @@ fun SettingsScreen(
     onSetThemedIcons: (Boolean) -> Unit,
     onSetDoubleTapToLock: (Boolean) -> Unit,
     edgeZoneWidthDp: Int,
+    stripInsetDp: Int,
     onSetEdgeSide: (EdgeSide) -> Unit,
     onSetEdgeZoneWidth: (Int) -> Unit,
+    onSetStripInset: (Int) -> Unit,
     onSetAzStripVisibility: (AzStripVisibility) -> Unit,
     onSetShowAlphabet: (Boolean) -> Unit,
     onSetSortByUsage: (Boolean) -> Unit,
@@ -475,6 +478,15 @@ fun SettingsScreen(
         },
         SettingsEntry(SettingsSection.APP_LIST, stringResource(R.string.settings_edge_side), "a-z strip left right") {
             EdgeSideRow(edgeSide) { edgePreviewTick++; onSetEdgeSide(it) }
+        },
+        SettingsEntry(SettingsSection.APP_LIST, stringResource(R.string.settings_strip_inset), "a-z strip distance edge offset") {
+            SliderRow(
+                label = stringResource(R.string.settings_strip_inset),
+                value = stripInsetDp.toFloat(),
+                range = STRIP_INSET_RANGE.first.toFloat()..STRIP_INSET_RANGE.last.toFloat(),
+                valueLabel = "${stripInsetDp}dp",
+                onValueChange = { onSetStripInset(it.roundToInt()) },
+            )
         },
         SettingsEntry(SettingsSection.APP_LIST, stringResource(R.string.settings_web_search), "search web browser") {
             SwitchRowWithDetail(

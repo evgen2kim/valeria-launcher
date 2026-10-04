@@ -80,6 +80,12 @@ enum class IconShape { SYSTEM, CIRCLE, ROUNDED, SQUARE }
 /** When the A-Z strip shows on the home screen itself. */
 enum class AzStripVisibility { NEVER, LANDSCAPE, ALWAYS }
 
+/** The A-Z strip's letters sit this far in from the screen edge so they aren't crowding it. */
+const val DEFAULT_STRIP_INSET_DP = 28
+
+/** What the strip's distance from the edge may be set to. */
+val STRIP_INSET_RANGE = 0..64
+
 private val Context.dataStore by preferencesDataStore(name = "victoria_prefs")
 
 /** Bumped only if the shape of an exported file changes, so an old one can be refused. */
@@ -153,6 +159,7 @@ class Prefs(private val context: Context) {
         val SORT_BY_USAGE = booleanPreferencesKey("sort_by_usage")
         val LAUNCH_COUNTS = stringPreferencesKey(PREF_LAUNCH_COUNTS)
         val EDGE_ZONE_WIDTH_DP = intPreferencesKey("edge_zone_width_dp")
+        val STRIP_INSET_DP = intPreferencesKey("strip_inset_dp")
         val QUICK_LAUNCH_LEFT = stringPreferencesKey(PREF_QUICK_LAUNCH_LEFT)
         val QUICK_LAUNCH_RIGHT = stringPreferencesKey(PREF_QUICK_LAUNCH_RIGHT)
         val LAYOUT_DEFAULTS_VERSION = intPreferencesKey("layout_defaults_version")
@@ -546,6 +553,11 @@ class Prefs(private val context: Context) {
 
     /** Width of the invisible strip at each screen edge that opens the app list. */
     val edgeZoneWidthDp: Flow<Int> = data.map { it[Keys.EDGE_ZONE_WIDTH_DP] ?: 56 }.distinctUntilChanged()
+
+    /** How far the A-Z strip's letters sit in from the screen edge. */
+    val stripInsetDp: Flow<Int> = data.map {
+        (it[Keys.STRIP_INSET_DP] ?: DEFAULT_STRIP_INSET_DP).coerceIn(STRIP_INSET_RANGE)
+    }.distinctUntilChanged()
 
     val quickLaunchLeft: Flow<String?> = data.map { it[Keys.QUICK_LAUNCH_LEFT] }.distinctUntilChanged()
 
@@ -1114,6 +1126,10 @@ class Prefs(private val context: Context) {
 
     suspend fun setEdgeZoneWidthDp(v: Int) {
         context.dataStore.edit { it[Keys.EDGE_ZONE_WIDTH_DP] = v }
+    }
+
+    suspend fun setStripInsetDp(v: Int) {
+        context.dataStore.edit { it[Keys.STRIP_INSET_DP] = v.coerceIn(STRIP_INSET_RANGE) }
     }
 
     suspend fun setQuickLaunch(slot: QuickLaunchSlot, componentKey: String?) {

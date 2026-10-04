@@ -45,6 +45,7 @@ import dev.victorialauncher.data.AppInfo
 import dev.victorialauncher.data.EntryKind
 import dev.victorialauncher.data.PrivateSpace
 import dev.victorialauncher.data.AzStripVisibility
+import dev.victorialauncher.data.DEFAULT_STRIP_INSET_DP
 import dev.victorialauncher.data.EdgeSide
 import dev.victorialauncher.data.EntryKeys
 import dev.victorialauncher.data.FavoritesSource
@@ -340,6 +341,7 @@ fun VictoriaNavHost(
     val sortByUsage by app.prefs.sortByUsage.collectAsState(initial = false)
     val launchCounts by app.prefs.launchCounts.collectAsState(initial = emptyMap())
     val edgeZoneWidthDp by app.prefs.edgeZoneWidthDp.collectAsState(initial = 56)
+    val stripInsetDp by app.prefs.stripInsetDp.collectAsState(initial = DEFAULT_STRIP_INSET_DP)
     val quickLaunchLeftKey by app.prefs.quickLaunchLeft.collectAsState(initial = null)
     val quickLaunchRightKey by app.prefs.quickLaunchRight.collectAsState(initial = null)
     val showAppIcons by app.prefs.showAppIcons.collectAsState(initial = true)
@@ -590,6 +592,7 @@ fun VictoriaNavHost(
         widgetSidePaddingDp = widgetSidePaddingDp,
         widgetOffsetXDp = widgetOffsetXDp,
         edgeZoneWidthDp = edgeZoneWidthDp,
+        stripInsetDp = stripInsetDp,
         swipeUpOpensAppList = swipeUpOpensList,
         appListSearch = appListSearchEnabled,
         appListSearchBottom = appListSearchBottom,
@@ -818,6 +821,7 @@ fun VictoriaNavHost(
                 doubleTapToLock = doubleTapToLock,
                 edgeSide = edgeSide,
                 edgeZoneWidthDp = edgeZoneWidthDp,
+                stripInsetDp = stripInsetDp,
                 azStripVisibility = azStripVisibility,
                 showAlphabet = showAlphabet,
                 sortByUsage = sortByUsage,
@@ -881,6 +885,7 @@ fun VictoriaNavHost(
                 onSetDoubleTapToLock = { scope.launch { app.prefs.setDoubleTapToLock(it) } },
                 onSetEdgeSide = { scope.launch { app.prefs.setEdgeSide(it) } },
                 onSetEdgeZoneWidth = { scope.launch { app.prefs.setEdgeZoneWidthDp(it) } },
+                onSetStripInset = { scope.launch { app.prefs.setStripInsetDp(it) } },
                 onSetAzStripVisibility = { scope.launch { app.prefs.setAzStripVisibility(it) } },
                 onSetShowAlphabet = { scope.launch { app.prefs.setShowAlphabet(it) } },
                 onSetSortByUsage = { scope.launch { app.prefs.setSortByUsage(it) } },

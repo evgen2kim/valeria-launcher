@@ -112,6 +112,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.victorialauncher.data.AppInfo
+import dev.victorialauncher.data.DEFAULT_STRIP_INSET_DP
 import dev.victorialauncher.data.EdgeSide
 import dev.victorialauncher.data.EntryKind
 import dev.victorialauncher.data.HomeAlignment
@@ -144,9 +145,6 @@ private val IDLE_BOTTOM_PADDING = 32.dp
 
 /** Smallest comfortable row, so a tap beside a small icon still lands on its app. */
 internal val MIN_ROW_HEIGHT = 48.dp
-
-/** How far rows are held back from the edge the A-Z strip occupies. */
-private val STRIP_INSET = 56.dp
 
 /** Sets the settings shortcut apart from the last app above it. */
 private val SETTINGS_ROW_GAP = 20.dp
@@ -212,6 +210,8 @@ fun AppListScreen(
     contentColor: Color,
     showAlphabet: Boolean,
     edgeSide: EdgeSide,
+    /** How far the A-Z strip sits in from the edge. */
+    stripInsetDp: Int,
     /** Hoisted so a swipe that overshoots the opening animation can keep scrolling it. */
     listState: LazyListState,
     /** How far the list still has to travel to be fully open; 0 once it has arrived. */
@@ -1033,6 +1033,7 @@ fun AppListScreen(
                 contentColor = contentColor,
                 edgeSide = edgeSide,
                 showAlphabet = showAlphabet,
+                stripInsetDp = stripInsetDp,
                 onGo = {
                     displayModel.rows
                         .filterIsInstance<AppListRow.Entry>()
@@ -1091,6 +1092,7 @@ fun AppListScreen(
                     scrubLetter != null || !highlightRange.isEmpty() -> sectionTopPx.toDp()
                     else -> restingTopPadding
                 }
+                val stripInset = stripContentInset(stripInsetDp)
                 // The strip is drawn over this list, not beside it, so the side it occupies
                 // has to be held clear. Held on every side the setting allows, not on the one
                 // this scrub happened to come from: with both edges enabled that was whichever
@@ -1098,8 +1100,8 @@ fun AppListScreen(
                 // opened from the other one. A margin against an edge the strip can appear on
                 // is worth more than a list that will not stay still.
                 PaddingValues(
-                    start = if (showAlphabet && edgeSide != EdgeSide.RIGHT) STRIP_INSET else 0.dp,
-                    end = if (showAlphabet && edgeSide != EdgeSide.LEFT) STRIP_INSET else 0.dp,
+                    start = if (showAlphabet && edgeSide != EdgeSide.RIGHT) stripInset else 0.dp,
+                    end = if (showAlphabet && edgeSide != EdgeSide.LEFT) stripInset else 0.dp,
                     top = top,
                     bottom = when {
                         searching -> SEARCH_EDGE_PADDING
@@ -1244,6 +1246,7 @@ fun AppListScreen(
                 contentColor = contentColor,
                 edgeSide = edgeSide,
                 showAlphabet = showAlphabet,
+                stripInsetDp = stripInsetDp,
                 onGo = {
                     displayModel.rows
                         .filterIsInstance<AppListRow.Entry>()
@@ -1266,6 +1269,7 @@ fun AppListScreen(
                 modifier = Modifier.align(
                     if (activeSide == EdgeSide.LEFT) Alignment.CenterStart else Alignment.CenterEnd
                 ),
+                insetDp = stripInsetDp,
             )
         }
 
@@ -1286,7 +1290,7 @@ fun AppListScreen(
         if (scrubLetter != null) {
             val bubble = 72.dp
             val halfPx = with(density) { (bubble / 2).toPx() }
-            val insetPx = with(density) { SCRUB_BUBBLE_INSET_DP.dp.toPx() }
+            val insetPx = with(density) { scrubBubbleInsetDp(stripInsetDp).dp.toPx() }
             Surface(
                 color = Color.Black.copy(alpha = 0.6f),
                 shape = RoundedCornerShape(22.dp),
@@ -1529,6 +1533,7 @@ internal fun SearchField(
     onGo: () -> Unit,
     atBottom: Boolean = false,
     modifier: Modifier = Modifier,
+    stripInsetDp: Int = DEFAULT_STRIP_INSET_DP,
 ) {
     OutlinedTextField(
         value = query,
@@ -1588,8 +1593,8 @@ internal fun SearchField(
                 // Only what the strip actually occupies. The extra 20dp a side matched the
                 // rows, but a field is not a row: it left the box noticeably narrower than the
                 // names under it, which is what reads as the search bar being off to one side.
-                start = if (showAlphabet && edgeSide != EdgeSide.RIGHT) STRIP_INSET else 8.dp,
-                end = if (showAlphabet && edgeSide != EdgeSide.LEFT) STRIP_INSET else 8.dp,
+                start = if (showAlphabet && edgeSide != EdgeSide.RIGHT) stripContentInset(stripInsetDp) else 8.dp,
+                end = if (showAlphabet && edgeSide != EdgeSide.LEFT) stripContentInset(stripInsetDp) else 8.dp,
                 top = if (atBottom) 8.dp else 12.dp,
                 bottom = if (atBottom) 12.dp else 8.dp,
             ),

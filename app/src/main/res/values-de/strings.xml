@@ -92,6 +92,7 @@
     <string name="settings_always_show_az">A-Z immer anzeigen</string>
     <string name="settings_show_alphabet">A-Z in der App-Liste anzeigen</string>
     <string name="settings_edge_zone_width">Breite des Randbereichs zum Wischen</string>
+    <string name="settings_strip_inset">Abstand der A-Z-Leiste vom Rand</string>
     <string name="settings_swipe_up_list">Nach oben wischen für die App-Liste</string>
     <string name="settings_swipe_up_list_detail">Über das Ende des Startbildschirms hinaus nach oben schieben</string>
     <string name="settings_quick_launch_left">Nach links wischen unter den Favoriten</string>

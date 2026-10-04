@@ -135,6 +135,7 @@
     <string name="settings_edge_band_only">Edge only beside the letters</string>
     <string name="settings_edge_band_only_detail">The side of the screen opens the app list only where the A-Z strip is, instead of all the way down. Keeps it out of the way of a widget</string>
     <string name="settings_edge_zone_width">Edge swipe width</string>
+    <string name="settings_strip_inset">A-Z distance from edge</string>
     <string name="settings_swipe_up_list">Swipe up for the app list</string>
     <string name="settings_swipe_up_list_detail">Push up past the end of the home screen</string>
     <string name="settings_quick_launch_left">Swipe left below favorites</string>

@@ -671,6 +671,7 @@ fun HomeRoute(
         ) {
             HomeScreen(
                 stripInsetSide = if (!stripAlwaysVisible) null else settings.edgeSide,
+                stripInsetDp = settings.stripInsetDp,
                 homeIntentTick = homeIntentTick,
                 closeFolderOnLaunch = settings.closeFolderOnLaunch,
                 showFavoriteIcons = settings.showFavoriteIcons,
@@ -930,6 +931,7 @@ fun HomeRoute(
                 contentColor = settings.contentColor,
                 showAlphabet = settings.showAlphabet,
                 edgeSide = settings.edgeSide,
+                stripInsetDp = settings.stripInsetDp,
                 statusBarHidden = settings.hideStatusBarAppList,
                 searchModel = searchModel,
                 shortcutSwipe = settings.shortcutSwipe,
@@ -1035,6 +1037,7 @@ fun HomeRoute(
                 modifier = Modifier.align(
                     if (scrub.side == EdgeSide.LEFT) Alignment.CenterStart else Alignment.CenterEnd
                 ),
+                insetDp = settings.stripInsetDp,
             )
         }
 
@@ -1155,6 +1158,7 @@ data class HomeSettings(
     val widgetSidePaddingDp: Int,
     val widgetOffsetXDp: Int,
     val edgeZoneWidthDp: Int,
+    val stripInsetDp: Int,
     val swipeUpOpensAppList: Boolean,
     val appListSearch: Boolean,
     val appListSearchBottom: Boolean,

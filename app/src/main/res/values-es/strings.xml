@@ -98,6 +98,7 @@
     <string name="settings_always_show_az">Mostrar siempre A-Z</string>
     <string name="settings_show_alphabet">Mostrar A-Z en la lista de aplicaciones</string>
     <string name="settings_edge_zone_width">Ancho del deslizamiento en el borde</string>
+    <string name="settings_strip_inset">Distancia de A-Z al borde</string>
     <string name="settings_swipe_up_list">Deslizar hacia arriba para la lista de aplicaciones</string>
     <string name="settings_swipe_up_list_detail">Empuja hacia arriba más allá del final de la pantalla de inicio</string>
     <string name="settings_quick_launch_left">Deslizar a la izquierda bajo los favoritos</string>

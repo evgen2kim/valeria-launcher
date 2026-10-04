@@ -118,6 +118,7 @@ import dev.victorialauncher.data.HomePaddings
 import dev.victorialauncher.data.folderToken
 import dev.victorialauncher.data.PaddingSlot
 import dev.victorialauncher.data.VisibilityRule
+import dev.victorialauncher.ui.applist.stripContentInset
 import dev.victorialauncher.ui.rules.RuleBadges
 import dev.victorialauncher.ui.rules.ruleSummary
 import dev.victorialauncher.media.NowPlayingWidget
@@ -181,6 +182,8 @@ private fun buildHomeItems(
 fun HomeScreen(
     /** The side an always-present A-Z strip occupies, so content can keep out from under it. */
     stripInsetSide: EdgeSide?,
+    /** How far that strip sits in from the edge, so content keeps clear by the same amount. */
+    stripInsetDp: Int,
     /** Bumped when HOME is pressed on a home screen already showing. */
     homeIntentTick: Int,
     /** Whether opening an app from inside a folder closes the folder behind it. */
@@ -445,12 +448,13 @@ fun HomeScreen(
     // An always-on A-Z strip is drawn over this screen rather than beside it, so the side or
     // sides it can occupy have to be held clear — otherwise it sits on top of the favorites,
     // which is what it did while this was passed in and never read.
-    val stripInset = remember(stripInsetSide) {
+    val stripInset = remember(stripInsetSide, stripInsetDp) {
+        val inset = stripContentInset(stripInsetDp)
         when (stripInsetSide) {
             null -> Modifier
-            EdgeSide.LEFT -> Modifier.padding(start = STRIP_INSET)
-            EdgeSide.RIGHT -> Modifier.padding(end = STRIP_INSET)
-            EdgeSide.BOTH -> Modifier.padding(horizontal = STRIP_INSET)
+            EdgeSide.LEFT -> Modifier.padding(start = inset)
+            EdgeSide.RIGHT -> Modifier.padding(end = inset)
+            EdgeSide.BOTH -> Modifier.padding(horizontal = inset)
         }
     }
 
@@ -1701,9 +1705,6 @@ private fun handleReserve(dragHandle: Modifier?, sidePaddingDp: Int): Dp {
  * a phone on its side keeps rows that are readable rather than a name at one edge and its icon
  * at the other.
  */
-/** How much of an edge an always-on A-Z strip takes, matching what the app list holds clear. */
-private val STRIP_INSET = 56.dp
-
 private val MAX_CONTENT_WIDTH = 600.dp
 
 /** Which side a capped stack sits against, so it stays where the rows are aligned. */
