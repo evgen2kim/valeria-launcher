@@ -875,7 +875,11 @@ fun HomeScreen(
                         is HomeItem.FolderItem -> FolderRow(
                             shortcutSwipe = shortcutSwipe,
                             folder = item.folder,
-                            members = item.folder.apps.mapNotNull { appsByKey[it] },
+                            // Edit mode never shows a folder's apps, so only revealing brings
+                            // back the ones a rule has away.
+                            members = item.folder.apps
+                                .filter { revealing || it !in ruleHidden }
+                                .mapNotNull { appsByKey[it] },
                             expanded = item.folder.id in expandedFolders,
                             editMode = editMode,
                             dragHandle = dragHandle,
@@ -916,6 +920,8 @@ fun HomeScreen(
                             onMemberAppInfo = onAppInfo,
                             onMemberUnpin = onUnpinShortcut,
                             onMemberEditIconName = { member -> renameDialogFor = member },
+                            memberRule = { member -> visibilityRules[member.key] },
+                            onMemberEditVisibility = { member -> onEditVisibility(member.key) },
                             onOpenSettings = onOpenSettings,
                             rule = visibilityRules[folderToken(item.folder.id)],
                             dimmed = editMode && folderToken(item.folder.id) in ruleHidden,
@@ -1311,6 +1317,8 @@ private fun FolderRow(
     onMemberAppInfo: (AppInfo) -> Unit,
     onMemberUnpin: (AppInfo) -> Unit,
     onMemberEditIconName: (AppInfo) -> Unit,
+    memberRule: (AppInfo) -> VisibilityRule?,
+    onMemberEditVisibility: (AppInfo) -> Unit,
     onOpenSettings: () -> Unit,
     rule: VisibilityRule?,
     /** Kept off the home screen by its rule right now; only ever true in edit mode. */
@@ -1498,6 +1506,7 @@ private fun FolderRow(
                             leadingIcon = { Icon(Icons.Filled.Tune, contentDescription = null) },
                             onClick = { memberMenuFor = null; onMemberEditIconName(member) },
                         )
+                        ShowWhenMenuItem(memberRule(member)) { memberMenuFor = null; onMemberEditVisibility(member) }
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.home_folder_choose_apps)) },
                             leadingIcon = { Icon(Icons.Filled.Checklist, contentDescription = null) },

@@ -2,6 +2,9 @@
 package dev.victorialauncher.data
 
 import android.Manifest
+import android.app.AppOpsManager
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -20,14 +23,20 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 /** Why the connected network's name can or cannot be read. */
 enum class WifiNameAccess {
@@ -42,14 +51,16 @@ enum class WifiNameAccess {
 
 /**
  * Keeps a [ContextSnapshot] current for the visibility rules: which Wi-Fi network, what time
- * it is, which headsets are connected.
+ * it is, which headsets are connected, what has been on screen today.
  *
  * Only while the launcher is on screen. Nothing here runs in the background — a rule is only
  * ever looked at by a home screen that is showing, and coming back to it is the moment the
  * answer is read again ([start] re-reads everything rather than trusting what it last saw).
  *
  * Every source is a callback rather than a poll: a network callback, an audio device callback,
- * and the system's own once-a-minute tick for the clock.
+ * and the system's own once-a-minute tick for the clock. Usage is the exception, read once each
+ * time the launcher comes back — which is right after the only sessions that could change it —
+ * and again when the day turns over.
  */
 class ContextMonitor(
     private val context: Context,
@@ -59,6 +70,7 @@ class ContextMonitor(
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
     private val wifiManager = context.applicationContext.getSystemService(WifiManager::class.java)
     private val audio = context.getSystemService(AudioManager::class.java)
+    private val usageStats = context.getSystemService(UsageStatsManager::class.java)
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private val _snapshot = MutableStateFlow(
@@ -72,9 +84,14 @@ class ContextMonitor(
     /** Every Wi-Fi network currently up, and the name each one reported, if any. */
     private val wifiNetworks = HashMap<Network, String?>()
 
+    private var usageJob: Job? = null
+
     private val timeReceiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context, intent: Intent) {
-            _snapshot.update { it.copy(now = LocalDateTime.now()) }
+            val now = LocalDateTime.now()
+            val dayChanged = _snapshot.value.now.toLocalDate() != now.toLocalDate()
+            _snapshot.update { it.copy(now = now) }
+            if (dayChanged || intent.action != Intent.ACTION_TIME_TICK) refreshUsage()
         }
     }
 
@@ -101,6 +118,7 @@ class ContextMonitor(
         // Fires once at registration with every device already connected.
         runCatching { audio.registerAudioDeviceCallback(audioCallback, mainHandler) }
         refreshAudio()
+        refreshUsage()
     }
 
     fun stop() {
@@ -120,6 +138,50 @@ class ContextMonitor(
         unregisterNetworkCallback()
         registerNetworkCallback()
     }
+
+    /** Usage access is a special permission, given on a system screen rather than in a dialog. */
+    fun hasUsageAccess(): Boolean = runCatching {
+        val ops = context.getSystemService(AppOpsManager::class.java)
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName)
+        } else {
+            @Suppress("DEPRECATION")
+            ops.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName)
+        }
+        if (mode == AppOpsManager.MODE_DEFAULT) {
+            granted(Manifest.permission.PACKAGE_USAGE_STATS)
+        } else {
+            mode == AppOpsManager.MODE_ALLOWED
+        }
+    }.getOrDefault(false)
+
+    /**
+     * Reads today's usage again, off the main thread. Also for when the counting itself has
+     * changed ([Prefs.setSessionTuning]) or access was just given.
+     */
+    fun refreshUsage() {
+        if (started == 0) return
+        usageJob?.cancel()
+        usageJob = scope.launch(Dispatchers.IO) {
+            val usage = if (hasUsageAccess()) readUsageToday(prefs.sessionTuning.first()) else null
+            _snapshot.update { it.copy(usage = usage) }
+        }
+    }
+
+    private fun readUsageToday(tuning: SessionTuning): UsageToday? = runCatching {
+        val now = System.currentTimeMillis()
+        val dayStart = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        // Started a little before midnight, so whatever was open across it is known.
+        val events = usageStats.queryEvents(dayStart - LOOKBACK_MILLIS, now)
+        val records = ArrayList<UsageEventRecord>()
+        val event = UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val kind = UsageEventKind.entries.firstOrNull { it.code == event.eventType } ?: continue
+            records += UsageEventRecord(event.timeStamp, kind, event.packageName.orEmpty())
+        }
+        UsageToday(dayStart, foregroundIntervals(records, dayStart, now), tuning)
+    }.getOrNull()
 
     fun wifiNameAccess(): WifiNameAccess {
         val fine = granted(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -210,6 +272,8 @@ class ContextMonitor(
     }
 
     companion object {
+        private const val LOOKBACK_MILLIS = 60L * 60 * 1000
+
         /** Absent from older SDK levels, so spelled out; values are from AudioDeviceInfo. */
         private const val TYPE_HEARING_AID = 23
         private const val TYPE_BLE_HEADSET = 26

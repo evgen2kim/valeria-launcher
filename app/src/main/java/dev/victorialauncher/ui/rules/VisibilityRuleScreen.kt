@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WarningAmber
@@ -76,6 +77,8 @@ fun VisibilityRuleScreen(
     /** What is stored; null for a favorite that has never had a rule. */
     rule: VisibilityRule?,
     snapshot: ContextSnapshot,
+    /** The apps a daily limit on this favorite counts. */
+    packages: Set<String>,
     rulesEnabled: Boolean,
     wifiAccess: WifiNameAccess,
     onChange: (VisibilityRule) -> Unit,
@@ -83,6 +86,7 @@ fun VisibilityRuleScreen(
     onOpenTime: () -> Unit,
     onAddWindow: () -> Unit,
     onOpenHeadset: () -> Unit,
+    onOpenLimit: () -> Unit,
     onApplyToOthers: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -138,7 +142,7 @@ fun VisibilityRuleScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             )
         }
-        RuleStatus(current, snapshot, rulesEnabled)
+        RuleStatus(current, snapshot, packages, rulesEnabled)
 
         // "Always" keeps the conditions but they do nothing, so they are put away rather than
         // left on screen looking as if they still applied.
@@ -187,6 +191,20 @@ fun VisibilityRuleScreen(
                     onClick = onOpenHeadset,
                 )
             }
+
+            SectionHeader(stringResource(R.string.rule_section_limit), Icons.Filled.HourglassBottom)
+            RuleCard {
+                val limit = current.usageLimit
+                NavRow(
+                    title = limitLabel(limit),
+                    detail = when {
+                        limit == null -> stringResource(R.string.rule_tap_to_add)
+                        snapshot.usage == null -> stringResource(R.string.limit_needs_access)
+                        else -> stringResource(R.string.limit_today_count, snapshot.usage.countedSessions(packages), limit.maxSessions)
+                    },
+                    onClick = onOpenLimit,
+                )
+            }
         }
 
         OutlinedButton(
@@ -202,7 +220,7 @@ fun VisibilityRuleScreen(
 }
 
 @Composable
-private fun RuleStatus(rule: VisibilityRule, snapshot: ContextSnapshot, rulesEnabled: Boolean) {
+private fun RuleStatus(rule: VisibilityRule, snapshot: ContextSnapshot, packages: Set<String>, rulesEnabled: Boolean) {
     val text: String
     val color: Color
     when {
@@ -212,7 +230,7 @@ private fun RuleStatus(rule: VisibilityRule, snapshot: ContextSnapshot, rulesEna
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         }
         else -> {
-            val visible = rule.isVisible(snapshot)
+            val visible = rule.isVisible(snapshot, packages)
             text = stringResource(
                 when {
                     rule.mode == VisibilityMode.HIDE_WHEN && visible -> R.string.rule_status_shown_by_hide

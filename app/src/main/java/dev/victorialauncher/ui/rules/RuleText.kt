@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wifi
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import dev.victorialauncher.R
 import dev.victorialauncher.data.HeadsetCondition
 import dev.victorialauncher.data.TimeWindow
+import dev.victorialauncher.data.UsageLimit
 import dev.victorialauncher.data.VisibilityMode
 import dev.victorialauncher.data.VisibilityRule
 import java.time.DayOfWeek
@@ -131,6 +133,7 @@ internal fun ruleSentence(rule: VisibilityRule): String? {
             HeadsetCondition.Wireless -> add(stringResource(R.string.rule_part_headset_wireless))
             is HeadsetCondition.Named -> add(stringResource(R.string.rule_part_headset_named, orList(headset.names.sorted())))
         }
+        rule.usageLimit?.let { add(stringResource(R.string.rule_part_limit, it.maxSessions)) }
     }
     var joined = parts.first()
     parts.drop(1).forEach { joined = stringResource(R.string.rule_join_and, joined, it) }
@@ -149,6 +152,7 @@ internal fun ruleSummary(rule: VisibilityRule?): String {
         if (rule.hasWifi) add(stringResource(R.string.rule_kind_wifi))
         if (rule.windows.isNotEmpty()) add(stringResource(R.string.rule_kind_time))
         if (rule.headset != null) add(stringResource(R.string.rule_kind_headset))
+        if (rule.usageLimit != null) add(stringResource(R.string.rule_kind_limit))
     }.joinToString(" · ")
     return stringResource(
         if (rule.mode == VisibilityMode.HIDE_WHEN) R.string.rule_summary_hide else R.string.rule_summary_only,
@@ -164,6 +168,11 @@ internal fun headsetLabel(condition: HeadsetCondition?): String = when (conditio
     HeadsetCondition.Wireless -> stringResource(R.string.headset_wireless)
     is HeadsetCondition.Named -> condition.names.sorted().joinToString(", ")
 }
+
+@Composable
+@ReadOnlyComposable
+internal fun limitLabel(limit: UsageLimit?): String =
+    if (limit == null) stringResource(R.string.rule_not_used) else stringResource(R.string.limit_label, limit.maxSessions)
 
 /**
  * The rule in miniature, under a row's name in edit mode. A crossed-out eye leads when the
@@ -197,6 +206,7 @@ internal fun RuleBadges(rule: VisibilityRule, contentColor: Color, modifier: Mod
             }
             Badge(Icons.Filled.Headphones, text, contentColor)
         }
+        rule.usageLimit?.let { Badge(Icons.Filled.HourglassBottom, stringResource(R.string.rule_badge_limit, it.maxSessions), contentColor) }
     }
 }
 

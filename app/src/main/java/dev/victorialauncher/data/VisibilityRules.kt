@@ -78,10 +78,12 @@ data class VisibilityRule(
     val wifi: List<String> = emptyList(),
     val windows: List<TimeWindow> = emptyList(),
     val headset: HeadsetCondition? = null,
+    /** Met once today's allowance of sessions in the favorite's apps is used up. */
+    val usageLimit: UsageLimit? = null,
 ) {
     val hasWifi: Boolean get() = anyWifi || wifi.isNotEmpty()
 
-    val hasConditions: Boolean get() = hasWifi || windows.isNotEmpty() || headset != null
+    val hasConditions: Boolean get() = hasWifi || windows.isNotEmpty() || headset != null || usageLimit != null
 
     val isActive: Boolean get() = mode != VisibilityMode.ALWAYS && hasConditions
 
@@ -89,15 +91,18 @@ data class VisibilityRule(
      * Whether the row belongs on the home screen right now.
      *
      * A condition that cannot be answered — the network's name withheld because location is
-     * off or not granted — never hides anything. Better an app on screen that was meant to be
-     * away than one that vanished for a reason nobody can see.
+     * off or not granted, usage access not given — never hides anything. Better an app on
+     * screen that was meant to be away than one that vanished for a reason nobody can see.
+     *
+     * [packages] are the apps a [usageLimit] counts, from [packagesForKey].
      */
-    fun isVisible(context: ContextSnapshot): Boolean {
+    fun isVisible(context: ContextSnapshot, packages: Set<String> = emptySet()): Boolean {
         if (!isActive) return true
         val answers = buildList {
             if (hasWifi) add(wifiMatch(context))
             if (windows.isNotEmpty()) add(if (windows.any { context.now in it }) Match.YES else Match.NO)
             headset?.let { add(headsetMatch(it, context)) }
+            usageLimit?.let { add(usageMatch(it, context, packages)) }
         }
         return when (mode) {
             VisibilityMode.ALWAYS -> true
@@ -123,6 +128,12 @@ data class VisibilityRule(
         return if (hit) Match.YES else Match.NO
     }
 
+    private fun usageMatch(limit: UsageLimit, context: ContextSnapshot, packages: Set<String>): Match {
+        val usage = context.usage ?: return Match.UNKNOWN
+        if (packages.isEmpty()) return Match.UNKNOWN
+        return if (usage.countedSessions(packages) >= limit.maxSessions) Match.YES else Match.NO
+    }
+
     private enum class Match { YES, NO, UNKNOWN }
 }
 
@@ -143,11 +154,17 @@ data class ContextSnapshot(
     val ssid: String?,
     val now: LocalDateTime,
     val audioOutputs: List<AudioOutput>,
+    /** Null without usage access, which leaves every usage limit unanswered. */
+    val usage: UsageToday? = null,
 )
 
 /** The favorites [rules] keep off the home screen in [context]. */
-fun hiddenByRules(rules: Map<String, VisibilityRule>, context: ContextSnapshot): Set<String> =
-    rules.filterValues { !it.isVisible(context) }.keys
+fun hiddenByRules(
+    rules: Map<String, VisibilityRule>,
+    context: ContextSnapshot,
+    packagesOf: (String) -> Set<String> = { emptySet() },
+): Set<String> =
+    rules.filter { (key, rule) -> !rule.isVisible(context, if (rule.usageLimit != null) packagesOf(key) else emptySet()) }.keys
 
 /** An output seen at some point, so a device can be picked while it is not connected. */
 data class SeenAudioDevice(val name: String, val wireless: Boolean, val lastSeenMillis: Long)
@@ -236,6 +253,7 @@ private fun ruleToJson(rule: VisibilityRule): JSONObject = JSONObject().apply {
             JSONObject().put("type", "named").put("names", JSONArray(headset.names.sorted())),
         )
     }
+    rule.usageLimit?.let { put("usage", JSONObject().put("sessions", it.maxSessions)) }
 }
 
 private fun ruleFromJson(obj: JSONObject): VisibilityRule {
@@ -260,7 +278,10 @@ private fun ruleFromJson(obj: JSONObject): VisibilityRule {
             else -> null
         }
     }
-    return VisibilityRule(mode, obj.optBoolean("anyWifi", false), wifi, windows, headset)
+    val usageLimit = obj.optJSONObject("usage")?.let { u ->
+        u.optInt("sessions", -1).takeIf { it in UsageLimit.MIN..UsageLimit.MAX }?.let(::UsageLimit)
+    }
+    return VisibilityRule(mode, obj.optBoolean("anyWifi", false), wifi, windows, headset, usageLimit)
 }
 
 private val MINUTES_IN_DAY = 0 until 24 * 60

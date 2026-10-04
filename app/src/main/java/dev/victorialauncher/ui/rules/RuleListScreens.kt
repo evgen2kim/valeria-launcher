@@ -94,6 +94,7 @@ fun RulesOverviewScreen(
     wifiAccess: WifiNameAccess,
     targets: List<RuleTarget>,
     rules: Map<String, VisibilityRule>,
+    packagesOf: (String) -> Set<String>,
     onEdit: (String) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -155,7 +156,7 @@ fun RulesOverviewScreen(
                 val rule = rules.getValue(target.key)
                 TargetRow(target = target, detail = ruleSummary(rule), onClick = { onEdit(target.key) }) {
                     if (enabled && rule.isActive) {
-                        val visible = rule.isVisible(snapshot)
+                        val visible = rule.isVisible(snapshot, packagesOf(target.key))
                         Surface(
                             shape = MaterialTheme.shapes.small,
                             color = if (visible) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,

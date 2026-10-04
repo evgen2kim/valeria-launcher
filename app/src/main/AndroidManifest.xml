@@ -28,6 +28,11 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Asks for a fresh scan when the network picker opens. Granted at install, no prompt. -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- A daily limit on a favorite: counts today's sessions in its apps so the icon can go
+         once they are used up. Usage access is granted by hand on a system screen, only when
+         someone adds a limit, and only read while the launcher is on screen. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".VictoriaApp"

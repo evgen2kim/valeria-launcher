@@ -85,6 +85,9 @@ import dev.victorialauncher.ui.common.AppIcon
 import dev.victorialauncher.data.TimeWindow
 import dev.victorialauncher.data.VisibilityRule
 import dev.victorialauncher.data.hiddenByRules
+import dev.victorialauncher.data.packagesForKey
+import dev.victorialauncher.data.SessionTuning
+import dev.victorialauncher.ui.rules.UsageLimitScreen
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
@@ -362,8 +365,15 @@ fun VictoriaNavHost(
     // Narrowed to the one answer the home screen needs and only passed on when it changes, so
     // the clock ticking over every minute does not recompose everything collected above.
     val ruleHidden by remember {
-        combine(app.prefs.visibilityRules, app.prefs.visibilityRulesEnabled, app.contextMonitor.snapshot) { rules, enabled, now ->
-            if (enabled) hiddenByRules(rules, now) else emptySet()
+        combine(
+            app.prefs.visibilityRules,
+            app.prefs.visibilityRulesEnabled,
+            app.contextMonitor.snapshot,
+            app.prefs.folders,
+        ) { rules, enabled, now, folderList ->
+            if (!enabled) return@combine emptySet()
+            val byId = folderList.associateBy { it.id }
+            hiddenByRules(rules, now) { key -> packagesForKey(key, byId) }
         }.distinctUntilChanged()
     }.collectAsState(initial = emptySet())
 
@@ -420,6 +430,19 @@ fun VictoriaNavHost(
     val foldersById = remember(folders) { folders.associateBy { it.id } }
 
     fun ruleRoute(key: String, suffix: String = "") = "rule/" + Uri.encode(key) + suffix
+    val packagesOf: (String) -> Set<String> = remember(foldersById) { { key -> packagesForKey(key, foldersById) } }
+    val sessionTuning by app.prefs.sessionTuning.collectAsState(initial = SessionTuning())
+    fun openUsageAccess() {
+        // The per-app page where there is one; some phones only have the list.
+        val perApp = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            .setData(Uri.fromParts("package", context.packageName, null))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { context.startActivity(perApp) }.onFailure {
+            runCatching {
+                context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        }
+    }
 
     // A favorites row is an app or a folder; both come out of the same ordered token list.
     //
@@ -462,17 +485,22 @@ fun VictoriaNavHost(
 
     // The favorites as the rule screens list them, in home-screen order.
     val folderTint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-    val ruleTargets = remember(favoriteEntries, nameOverrides, iconSizeDp, folderTint) {
-        favoriteEntries.map { entry ->
-            when (entry) {
-                is FavoriteEntry.App -> RuleTarget(entry.token, nameOverrides[entry.app.key] ?: entry.app.label) {
-                    AppIcon(app = entry.app, sizeDp = minOf(iconSizeDp, 40))
-                }
-                is FavoriteEntry.FolderRef -> RuleTarget(entry.token, entry.folder.name) {
-                    Icon(Icons.Filled.Folder, contentDescription = null, tint = folderTint, modifier = Modifier.size(minOf(iconSizeDp, 40).dp))
-                }
+    // A folder's apps follow right after it, since each can have a rule of its own.
+    val ruleTargets = remember(favoriteEntries, appsByKey, nameOverrides, iconSizeDp, folderTint) {
+        fun appTarget(app: AppInfo, folder: String? = null) =
+            RuleTarget(app.key, (nameOverrides[app.key] ?: app.label) + folder?.let { " · $it" }.orEmpty()) {
+                AppIcon(app = app, sizeDp = minOf(iconSizeDp, 40))
             }
-        }
+        favoriteEntries.flatMap { entry ->
+            when (entry) {
+                is FavoriteEntry.App -> listOf(appTarget(entry.app))
+                is FavoriteEntry.FolderRef -> listOf(
+                    RuleTarget(entry.token, entry.folder.name) {
+                        Icon(Icons.Filled.Folder, contentDescription = null, tint = folderTint, modifier = Modifier.size(minOf(iconSizeDp, 40).dp))
+                    },
+                ) + entry.folder.apps.mapNotNull { appsByKey[it] }.map { appTarget(it, entry.folder.name) }
+            }
+        }.distinctBy { it.key }
     }
 
     // Rasterise icons in the background so opening the A-Z list doesn't have to. Favorites and
@@ -1021,6 +1049,7 @@ fun VictoriaNavHost(
                 wifiAccess = remember(snapshot) { app.contextMonitor.wifiNameAccess() },
                 targets = ruleTargets,
                 rules = visibilityRules,
+                packagesOf = packagesOf,
                 onEdit = { key -> navController.navigate(ruleRoute(key)) },
                 onBack = { navController.popBackStack() },
             )
@@ -1037,6 +1066,7 @@ fun VictoriaNavHost(
                 icon = { target?.icon?.invoke() ?: appsByKey[key]?.let { AppIcon(app = it, sizeDp = 40) } },
                 rule = rule,
                 snapshot = snapshot,
+                packages = remember(key, foldersById) { packagesOf(key) },
                 rulesEnabled = visibilityRulesEnabled,
                 wifiAccess = remember(snapshot) { app.contextMonitor.wifiNameAccess() },
                 onChange = { scope.launch { app.prefs.setVisibilityRule(key, it) } },
@@ -1048,6 +1078,7 @@ fun VictoriaNavHost(
                     navController.navigate(ruleRoute(key, "/time"))
                 },
                 onOpenHeadset = { navController.navigate(ruleRoute(key, "/headset")) },
+                onOpenLimit = { navController.navigate(ruleRoute(key, "/limit")) },
                 onApplyToOthers = { navController.navigate(ruleRoute(key, "/apply")) },
                 onBack = { navController.popBackStack() },
             )
@@ -1082,6 +1113,33 @@ fun VictoriaNavHost(
                 rule = visibilityRules[key],
                 snapshot = snapshot,
                 seenDevices = seenAudioDevices,
+                onChange = { scope.launch { app.prefs.setVisibilityRule(key, it) } },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable("rule/{key}/limit") { entry ->
+            val key = entry.arguments?.getString("key")?.let { Uri.decode(it) }.orEmpty()
+            val snapshot by app.contextMonitor.snapshot.collectAsState()
+            val packages = remember(key, foldersById) { packagesOf(key) }
+            UsageLimitScreen(
+                rule = visibilityRules[key],
+                snapshot = snapshot,
+                packages = packages,
+                appName = { pkg ->
+                    allApps.firstOrNull { it.kind == EntryKind.APP && it.userSerial == 0L && it.componentName.packageName == pkg }
+                        ?.let { nameOverrides[it.key] ?: it.label } ?: pkg
+                },
+                hasAccess = remember(snapshot) { app.contextMonitor.hasUsageAccess() },
+                onGrantAccess = ::openUsageAccess,
+                tuning = sessionTuning,
+                onTuningChange = {
+                    scope.launch {
+                        app.prefs.setSessionTuning(it)
+                        app.contextMonitor.refreshUsage()
+                    }
+                },
+                onRefresh = { app.contextMonitor.refreshUsage() },
                 onChange = { scope.launch { app.prefs.setVisibilityRule(key, it) } },
                 onBack = { navController.popBackStack() },
             )

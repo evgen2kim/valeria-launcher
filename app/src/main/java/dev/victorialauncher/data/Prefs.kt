@@ -102,6 +102,8 @@ class Prefs(private val context: Context) {
         val VISIBILITY_RULES = stringPreferencesKey(PREF_VISIBILITY_RULES)
         val VISIBILITY_RULES_ENABLED = booleanPreferencesKey("visibility_rules_enabled")
         val SEEN_AUDIO_DEVICES = stringPreferencesKey("seen_audio_devices_json")
+        val USAGE_MIN_SESSION_SECONDS = intPreferencesKey("usage_min_session_seconds")
+        val USAGE_MERGE_GAP_SECONDS = intPreferencesKey("usage_merge_gap_seconds")
         val ICON_SIZE_DP = intPreferencesKey("icon_size_dp")
         val LABEL_SIZE_SP = intPreferencesKey("label_size_sp")
         val ITEM_SPACING_DP = intPreferencesKey("item_spacing_dp")
@@ -340,6 +342,14 @@ class Prefs(private val context: Context) {
     /** Headsets seen connected before, so one can be picked while it is not. */
     val seenAudioDevices: Flow<List<SeenAudioDevice>> =
         data.map { pref -> seenAudioDevicesFromJson(pref[Keys.SEEN_AUDIO_DEVICES]) }.distinctUntilChanged()
+
+    /** How every usage limit tells a session from a glance; one setting for all of them. */
+    val sessionTuning: Flow<SessionTuning> = data.map { pref ->
+        SessionTuning(
+            minSessionSeconds = pref[Keys.USAGE_MIN_SESSION_SECONDS] ?: SessionTuning.DEFAULT_MIN_SECONDS,
+            mergeGapSeconds = pref[Keys.USAGE_MERGE_GAP_SECONDS] ?: SessionTuning.DEFAULT_GAP_SECONDS,
+        )
+    }.distinctUntilChanged()
 
     val iconSizeDp: Flow<Int> = data.map { it[Keys.ICON_SIZE_DP] ?: 56 }.distinctUntilChanged()
 
@@ -876,6 +886,13 @@ class Prefs(private val context: Context) {
 
     suspend fun setVisibilityRulesEnabled(enabled: Boolean) {
         context.dataStore.edit { it[Keys.VISIBILITY_RULES_ENABLED] = enabled }
+    }
+
+    suspend fun setSessionTuning(tuning: SessionTuning) {
+        context.dataStore.edit { pref ->
+            pref[Keys.USAGE_MIN_SESSION_SECONDS] = tuning.minSessionSeconds.coerceIn(SessionTuning.MIN_SECONDS_RANGE)
+            pref[Keys.USAGE_MERGE_GAP_SECONDS] = tuning.mergeGapSeconds.coerceIn(SessionTuning.GAP_SECONDS_RANGE)
+        }
     }
 
     /** Remembers [outputs]; writes nothing when they were all seen already today. */

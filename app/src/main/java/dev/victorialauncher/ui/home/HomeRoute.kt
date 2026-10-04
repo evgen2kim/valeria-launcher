@@ -283,7 +283,20 @@ fun HomeRoute(
         )
         onDispose { context.unregisterReceiver(receiver) }
     }
-    val hiddenNow = remember(favorites, ruleHidden) { favorites.filter { it.token in ruleHidden }.map { it.token }.toSet() }
+    // A folder's apps can have rules of their own. One that is away leaves its folder; a folder
+    // with every app away is away itself, since there would be nothing to open it for.
+    val hiddenNow = remember(favorites, ruleHidden) {
+        buildSet {
+            favorites.forEach { entry ->
+                if (entry.token in ruleHidden) add(entry.token)
+                if (entry is FavoriteEntry.FolderRef) {
+                    val away = entry.folder.apps.filter { it in ruleHidden }
+                    addAll(away)
+                    if (away.isNotEmpty() && away.size == entry.folder.apps.size) add(entry.token)
+                }
+            }
+        }
+    }
     // Edit mode lists everything, faded where a rule has it away, so the order being edited is
     // the whole order and nothing can be dragged past a row that is not there.
     val filterByRules = hiddenNow.isNotEmpty() && !homeEditMode && !revealRuleHidden
