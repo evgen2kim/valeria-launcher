@@ -49,7 +49,8 @@ leans out, past it it snaps in. The A-Z list and its keyboard setting are untouc
 
 ## Install
 
-There is no store build of Valeria yet — build it from source (see [Build](#build)).
+Download the APK from [Releases](https://github.com/evgen2kim/valeria-launcher/releases/latest).
+There is no store build yet; you can also build it from source (see [Build](#build)).
 
 Valeria still uses Victoria's package name, `dev.victorialauncher`, so the two
 cannot be installed side by side, and since the signatures differ you have to
