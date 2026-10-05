@@ -1,5 +1,7 @@
 # Valeria Launcher
 
+<p align="center"><img src="docs/context.gif" width="360" alt="The home screen through a day: everyday apps in the morning, Spotify and Podcasts with headphones on the way, Slack and Jira on the office Wi-Fi, music and YouTube in the evening, and Instagram leaving after its second session"></p>
+
 **Valeria is a fork of [Victoria Launcher](https://github.com/adelmonte/victoria-launcher)
 that makes the home screen change with your context and helps you scroll less.**
 Upstream Victoria is a minimal, list-based home screen whose favorites never move.
