@@ -1,6 +1,35 @@
 # Valeria Launcher
 
+**An open-source Android launcher that adapts your home screen to your daily routine.**
+
+A minimal, list-based home screen based on [Victoria Launcher](https://github.com/adelmonte/victoria-launcher), with context-aware favorites that appear or disappear based on your Wi-Fi network, time of day, connected headphones, and daily app session limits.
+
+**Less scrolling. Fewer distractions. The right apps at the right time.**
+
 <p align="center"><img src="docs/context.gif" width="360" alt="The home screen through a day: everyday apps in the morning, Spotify and Podcasts with headphones on the way, Slack and Jira on the office Wi-Fi, music and YouTube in the evening, and Instagram leaving after its second session"></p>
+
+## Why Valeria?
+
+Your phone serves different purposes throughout the day. Your home screen doesn't have to stay the same.
+
+- **At work:** Hide work apps outside working hours.
+- **At home:** Show the apps you use on your home Wi-Fi.
+- **With headphones:** Make your music apps appear when you connect your headphones.
+- **Less mindless scrolling:** Hide selected apps after you've used up your daily session limit.
+- **Stay minimal:** Keep the clean, list-based interface of Victoria Launcher.
+
+Every favorite — including apps, shortcuts, and folders — can have its own visibility rules.
+
+![The Niagara-style A-Z list with its letter strip, the same home screen at the office and at home in the evening, and the rule that shows Slack only on the office Wi-Fi during working hours](docs/visibility-rules.png)
+
+## Key features
+
+- **Context-aware favorites:** Show or hide apps based on Wi-Fi, time, connected headsets, and daily session limits.
+- **Flexible rules:** Combine conditions to control when favorites appear.
+- **Session limits:** Hide selected apps after a configurable number of daily sessions.
+- **Minimal, list-based interface:** A clean home screen without a traditional grid of icons.
+- **Fast app search:** Swipe up to open a dedicated search screen with the keyboard ready.
+- **Customizable layout:** Adjust favorite order, spacing, dimensions, and margins.
 
 **Valeria is a fork of [Victoria Launcher](https://github.com/adelmonte/victoria-launcher)
 that makes the home screen change with your context and helps you scroll less.**
@@ -12,8 +41,6 @@ Work apps disappear at the weekend, music apps come up with the headphones, and
 Instagram leaves the home screen after its second short session of the day.
 Swipe up also opens a dedicated **search screen** with the keyboard already up.
 Everything else is Victoria as it was at 0.77.1.
-
-![The Niagara-style A-Z list with its letter strip, the same home screen at the office and at home in the evening, and the rule that shows Slack only on the office Wi-Fi during working hours](docs/visibility-rules.png)
 
 ## What is different from Victoria
 
