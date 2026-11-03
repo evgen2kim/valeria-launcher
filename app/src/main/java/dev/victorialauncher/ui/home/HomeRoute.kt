@@ -539,10 +539,10 @@ fun HomeRoute(
         }
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_PAUSE -> {
-                    // Hide before the next return can draw the old, fully visible frame.
-                    // A separate gate takes effect immediately, even if cancellation of the
-                    // previous animation and resetting its Animatable are still queued.
+                Lifecycle.Event.ON_STOP -> {
+                    // PAUSE arrives while the launcher's window is still visible during
+                    // the app-opening transition. Keep favorites and overlays intact until
+                    // STOP, when the window is no longer visible, then prepare the return.
                     homeReturnHidden = true
                     entranceJob?.cancel()
                     closeAppList(snap = true)
