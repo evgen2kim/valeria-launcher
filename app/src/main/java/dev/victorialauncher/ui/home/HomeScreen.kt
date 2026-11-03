@@ -180,6 +180,8 @@ private fun buildHomeItems(
 
 @Composable
 fun HomeScreen(
+    /** Draw-only progress, replayed when the launcher returns from another app. */
+    favoritesEntrance: () -> Float,
     /** The side an always-present A-Z strip occupies, so content can keep out from under it. */
     stripInsetSide: EdgeSide?,
     /** How far that strip sits in from the edge, so content keeps clear by the same amount. */
@@ -839,6 +841,11 @@ fun HomeScreen(
                         }
                         .zIndex(if (draggingIndex == index) 1f else 0f)
                         .graphicsLayer {
+                            if (item !is HomeItem.Widget && !editMode) {
+                                val progress = favoritesEntrance()
+                                alpha = progress
+                                translationY = (1f - progress) * 14.dp.toPx()
+                            }
                             if (draggingIndex == index) {
                                 translationY = dragOffset
                                 scaleX = 1.03f

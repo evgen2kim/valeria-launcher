@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package dev.victorialauncher.ui.home
 
+import dev.victorialauncher.ui.common.listEntrance
 import android.app.SearchManager
 import android.view.HapticFeedbackConstants
 import android.content.BroadcastReceiver
@@ -15,6 +16,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -109,7 +111,7 @@ private const val LAUNCH_CLOSE_TIMEOUT_MS = 2000L
 /** Room each letter wants on the strip before it stops being something anyone can hit. */
 private val MIN_LETTER_HEIGHT = 15.dp
 
-private const val HOME_FADE_MS = 220
+private const val HOME_FADE_MS = 280
 
 /**
  * How far a swipe up carries the app list in. The same distance a pull collapses it over, so
@@ -366,9 +368,8 @@ fun HomeRoute(
     // Set while a launched app is expected to take over the screen; see closeAfterLaunch.
     var launchClose by remember { mutableStateOf<Job?>(null) }
 
-    // The home screen fades back in when we put the list away ourselves, but not when the
-    // system did it for us: laying our own fade over Android's home transition — or running it
-    // on resume for a close that happened while we were backgrounded — just reads as noise.
+    // Overlay dismissal has its own fade. System dismissals snap that overlay state;
+    // the favorites' separate lifecycle entrance handles returning from another app.
     var snapHome by remember { mutableStateOf(false) }
 
     // Hoisted so closing the list clears it; the overlay stays composed while hidden, so a
@@ -524,15 +525,40 @@ fun HomeRoute(
     // Leaving the launcher (screen off, another app) should always drop us back to the home
     // screen rather than reopening onto the overlay.
     val lifecycleOwner = LocalLifecycleOwner.current
+    val homeReturnProgress = remember { Animatable(0f) }
+    var homeReturnHidden by remember { mutableStateOf(true) }
     DisposableEffect(lifecycleOwner) {
+        var entranceJob: Job? = null
+        fun revealFavorites() {
+            entranceJob?.cancel()
+            entranceJob = scope.launch {
+                homeReturnProgress.snapTo(0f)
+                homeReturnHidden = false
+                homeReturnProgress.animateTo(1f, tween(360, easing = FastOutSlowInEasing))
+            }
+        }
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_PAUSE) {
-                closeAppList(snap = true)
-                closeSearch(snap = true)
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    // Hide before the next return can draw the old, fully visible frame.
+                    // A separate gate takes effect immediately, even if cancellation of the
+                    // previous animation and resetting its Animatable are still queued.
+                    homeReturnHidden = true
+                    entranceJob?.cancel()
+                    closeAppList(snap = true)
+                    closeSearch(snap = true)
+                }
+                // Do not wait for window focus: on gesture navigation it can arrive long
+                // after home is visible, causing a second, delayed entrance.
+                Lifecycle.Event.ON_RESUME -> revealFavorites()
+                else -> Unit
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            entranceJob?.cancel()
+        }
     }
     LaunchedEffect(homeIntentTick) {
         if (homeIntentTick > 0) {
@@ -600,7 +626,7 @@ fun HomeRoute(
             animationSpec = if (appListVisible || snapHome) {
                 snap()
             } else {
-                tween(HOME_FADE_MS, easing = LinearOutSlowInEasing)
+                tween(HOME_FADE_MS, easing = FastOutSlowInEasing)
             },
             label = "homeAlpha",
         )
@@ -621,7 +647,7 @@ fun HomeRoute(
             animationSpec = if (appListVisible || snapHome) {
                 snap()
             } else {
-                tween(HOME_FADE_MS, easing = LinearOutSlowInEasing)
+                tween(HOME_FADE_MS, easing = FastOutSlowInEasing)
             },
             label = "wallpaperDim",
         )
@@ -646,7 +672,10 @@ fun HomeRoute(
         }
         Box(
             modifier = Modifier
-                .graphicsLayer { alpha = homeAlpha * (1f - searchAnim.value.coerceIn(0f, 1f)) }
+                .graphicsLayer {
+                    alpha = homeAlpha * (1f - searchAnim.value.coerceIn(0f, 1f))
+                    translationY = (1f - homeAlpha) * 14.dp.toPx()
+                }
                 .then(
                     // Hidden, but still laid out: an AppWidgetHostView that is never placed
                     // loses its layout and comes back with its text collapsed.
@@ -670,6 +699,7 @@ fun HomeRoute(
                 .graphicsLayer { alpha = homeContentAlpha },
         ) {
             HomeScreen(
+                favoritesEntrance = { if (homeReturnHidden) 0f else homeReturnProgress.value },
                 stripInsetSide = if (!stripAlwaysVisible) null else settings.edgeSide,
                 stripInsetDp = settings.stripInsetDp,
                 homeIntentTick = homeIntentTick,
@@ -884,6 +914,7 @@ fun HomeRoute(
         val overlayAlpha = if (appListVisible) 1f else 0f
         Box(
             modifier = Modifier
+                .listEntrance(appListVisible)
                 .graphicsLayer { alpha = overlayAlpha }
                 .layout { measurable, constraints ->
                     val placeable = measurable.measure(constraints)

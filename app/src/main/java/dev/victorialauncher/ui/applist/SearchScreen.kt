@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package dev.victorialauncher.ui.applist
 
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.clickable
@@ -251,6 +253,11 @@ fun SearchScreen(
                         }
                     }
                     items(results, key = { it.app.key }) { row ->
+                        Box(Modifier.animateItem(
+                            fadeInSpec = tween(180),
+                            placementSpec = spring(dampingRatio = 1f, stiffness = 550f),
+                            fadeOutSpec = tween(100),
+                        )) {
                         AppRow(
                             shortcutSwipe = shortcutSwipe,
                             favoritesEditable = favoritesEditable,
@@ -276,6 +283,7 @@ fun SearchScreen(
                             isHidden = row.app.key in hiddenApps,
                             onMoveToFolder = { onMoveToFolder(row.app) },
                         )
+                        }
                     }
                 }
             }

@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package dev.victorialauncher.ui.applist
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
@@ -81,6 +90,25 @@ fun EdgeScrubber(
     val sigmaPx = 2.6f * spacingPx
     val bellPx = BELL_AMPLITUDE_DP * density
 
+    // Keep the last touch position on release: only the amplitude returns to zero.
+    // Observe pointer state outside composition; the 26 glyphs still update in draw only.
+    val currentY = rememberUpdatedState(scrubY)
+    val lastTouchY = remember { mutableFloatStateOf(0f) }
+    val strength = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        snapshotFlow { currentY.value() }.filterNotNull().collect { y ->
+            lastTouchY.floatValue = y
+        }
+    }
+    LaunchedEffect(Unit) {
+        snapshotFlow { currentY.value() != null }.collectLatest { active ->
+            strength.animateTo(
+                if (active) 1f else 0f,
+                spring(dampingRatio = 0.85f, stiffness = 550f),
+            )
+        }
+    }
+
     Box(
         modifier = modifier
             // Wide enough for the inset, the letter cell and the whole outward bulge — at
@@ -99,13 +127,10 @@ fun EdgeScrubber(
                     .offset { IntOffset(0, (centerY - spacingPx / 2f).roundToInt()) }
                     .width(20.dp)
                     .graphicsLayer {
-                        val y = scrubY()
-                        val gain = if (y == null) {
-                            0f
-                        } else {
-                            val d = y - centerY
-                            exp(-(d * d) / (2f * sigmaPx * sigmaPx))
-                        }
+                        // Position follows the finger directly, with no spring chasing it.
+                        // Only the bulge's appearance and release are animated.
+                        val d = (scrubY() ?: lastTouchY.floatValue) - centerY
+                        val gain = strength.value * exp(-(d * d) / (2f * sigmaPx * sigmaPx))
 
                         // Position only — the glyph is never scaled.
                         val outward = bellPx * gain + pullPx() * gain

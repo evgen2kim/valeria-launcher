@@ -1161,7 +1161,12 @@ fun AppListScreen(
                 Box(
                     // Read in the draw phase on purpose: the scrub fade would otherwise
                     // recompose every visible row on every frame of the 180ms tween.
-                    modifier = Modifier.graphicsLayer {
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = if (searching) tween(180) else null,
+                        // Scrubbing owns placement; animating it would trail the finger.
+                        placementSpec = if (searching) spring(dampingRatio = 1f, stiffness = 550f) else null,
+                        fadeOutSpec = if (searching) tween(100) else null,
+                    ).graphicsLayer {
                         alpha = if (index in highlightRange) 1f else othersAlpha
                     },
                 ) {
