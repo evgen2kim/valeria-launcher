@@ -1,0 +1,27 @@
+Categories:
+  - Launcher
+License: GPL-3.0-or-later
+SourceCode: https://github.com/evgen2kim/valeria-launcher
+IssueTracker: https://github.com/evgen2kim/valeria-launcher/issues
+Changelog: https://github.com/evgen2kim/valeria-launcher/releases
+
+AutoName: Valeria Launcher
+
+RepoType: git
+Repo: https://github.com/evgen2kim/valeria-launcher.git
+Binaries: https://github.com/evgen2kim/valeria-launcher/releases/download/v%v/valeria-launcher-v%v.apk
+
+Builds:
+  - versionName: 0.77.1-valeria.2
+    versionCode: 95
+    commit: 0f55f06c551054f2e2460d39fd1f87fab3610bac
+    subdir: app
+    gradle:
+      - yes
+
+AllowedAPKSigningKeys: 4a90e9c81ef0b892193ca6dfbaf7d691920258e79a1438ff7e945170f6270e64
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+-valeria\.[0-9]+$
+CurrentVersion: 0.77.1-valeria.2
+CurrentVersionCode: 95
