@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*-valeria.*']
 
 permissions:
   contents: write
@@ -10,6 +10,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      HAS_SIGNING_KEY: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +26,7 @@ jobs:
         run: ./gradlew test
 
       - name: Write signing config
+        if: env.HAS_SIGNING_KEY == 'true'
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -39,22 +42,23 @@ jobs:
           EOF
 
       - name: Build release APK
+        if: env.HAS_SIGNING_KEY == 'true'
         run: ./gradlew assembleRelease
 
       - name: Remove signing material
-        if: always()
+        if: always() && env.HAS_SIGNING_KEY == 'true'
         run: rm -f release.keystore keystore.properties
 
-      # Without a keystore the build falls back to app-release-unsigned.apk, so
-      # the signed name existing is what proves the secrets were picked up.
       - name: Verify the APK is signed
-        run: test -f app/build/outputs/apk/release/app-release.apk
+        if: env.HAS_SIGNING_KEY == 'true'
+        run: "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify app/build/outputs/apk/release/app-release.apk
 
       - name: Publish release
+        if: env.HAS_SIGNING_KEY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          asset="victoria-launcher-${GITHUB_REF_NAME}.apk"
+          asset="valeria-launcher-${GITHUB_REF_NAME}.apk"
           cp app/build/outputs/apk/release/app-release.apk "$asset"
 
           version_code=$(grep -oP 'versionCode\s*=\s*\K\d+' app/build.gradle.kts)
@@ -64,7 +68,9 @@ jobs:
           # second run then failed on "a release with the same tag name already exists" —
           # a red cross against a release that had in fact gone out perfectly well.
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "$asset" --clobber
+            if ! gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | grep -Fx "$asset" >/dev/null; then
+              gh release upload "$GITHUB_REF_NAME" "$asset"
+            fi
           elif [ -f "$notes" ]; then
             gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" \
               --notes-file "$notes" "$asset"

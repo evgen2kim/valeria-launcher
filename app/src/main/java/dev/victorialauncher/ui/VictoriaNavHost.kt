@@ -854,7 +854,7 @@ fun VictoriaNavHost(
                 onSetShortcutSwipe = { scope.launch { app.prefs.setShortcutSwipe(it) } },
                 quickLaunchSlide = quickLaunchSlide,
                 onSetQuickLaunchSlide = { scope.launch { app.prefs.setQuickLaunchSlide(it) } },
-                onExportSettings = { exportLauncher.launch("victoria-launcher-settings.json") },
+                onExportSettings = { exportLauncher.launch("valeria-launcher-settings.json") },
                 onImportSettings = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
                 onSetIconShape = { scope.launch { app.prefs.setIconShape(it); clearIconCache() } },
                 onSetThemedIcons = { scope.launch { app.prefs.setThemedIcons(it); clearIconCache() } },

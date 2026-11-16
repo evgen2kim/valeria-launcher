@@ -1,6 +1,8 @@
 <resources>
-    <string name="app_name">Victoria Launcher</string>
-    <string name="accessibility_description">Ermöglicht das Öffnen der Benachrichtigungsleiste per Wischen nach unten. Victoria Launcher liest keine Bildschirminhalte und reagiert nicht darauf.</string>
+    <string name="app_name">Valeria Launcher</string>
+    <string name="accessibility_service_name">Valeria Launcher-Gesten</string>
+    <string name="now_playing_service_name">Valeria Launcher – Aktuelle Wiedergabe</string>
+    <string name="accessibility_description">Ermöglicht das Öffnen der Benachrichtigungsleiste per Wischen nach unten. Valeria Launcher liest keine Bildschirminhalte und reagiert nicht darauf.</string>
 
     <!-- Shared actions -->
     <string name="action_back">Zurück</string>
@@ -15,7 +17,7 @@
     <string name="action_edit_icon_and_name">Symbol &amp; Name bearbeiten</string>
     <string name="action_move_to_folder">In Ordner verschieben…</string>
     <string name="action_change_icon">Symbol ändern…</string>
-    <string name="action_open_settings">Victoria Launcher-Einstellungen</string>
+    <string name="action_open_settings">Valeria Launcher-Einstellungen</string>
 
     <!-- Home screen -->
     <string name="home_drag_handle">Neu anordnen</string>
@@ -57,11 +59,11 @@
     <string name="applist_search">Apps suchen</string>
 
     <!-- Toasts -->
-    <string name="toast_enable_accessibility_shade">Aktiviere Victoria Launcher unter Einstellungen → Bedienungshilfen, um Benachrichtigungen zu öffnen</string>
-    <string name="toast_enable_accessibility_lock">Aktiviere Victoria Launcher unter Einstellungen → Bedienungshilfen, um den Bildschirm zu sperren</string>
+    <string name="toast_enable_accessibility_shade">Aktiviere Valeria Launcher unter Einstellungen → Bedienungshilfen, um Benachrichtigungen zu öffnen</string>
+    <string name="toast_enable_accessibility_lock">Aktiviere Valeria Launcher unter Einstellungen → Bedienungshilfen, um den Bildschirm zu sperren</string>
 
     <!-- Settings -->
-    <string name="settings_title">Victoria-Einstellungen</string>
+    <string name="settings_title">Valeria-Einstellungen</string>
     <string name="settings_section_appearance">Darstellung</string>
     <string name="settings_section_apps">Apps</string>
     <string name="settings_section_about">Über</string>
@@ -88,7 +90,7 @@
     <string name="settings_edge_side">Welcher Rand die App-Liste öffnet</string>
     <string name="settings_double_tap_lock">Doppeltippen zum Sperren des Bildschirms</string>
     <string name="settings_double_tap_lock_detail">Tippe zweimal auf die A-Z-Leiste</string>
-    <string name="settings_lock_needs_accessibility">Erfordert, dass Victoria Launcher unter „Bedienungshilfen“ aktiviert ist. Falls der Schalter ausgegraut ist, öffne zuerst die App-Info und erlaube eingeschränkte Einstellungen über das ⋮-Menü.</string>
+    <string name="settings_lock_needs_accessibility">Erfordert, dass Valeria Launcher unter „Bedienungshilfen“ aktiviert ist. Falls der Schalter ausgegraut ist, öffne zuerst die App-Info und erlaube eingeschränkte Einstellungen über das ⋮-Menü.</string>
     <string name="settings_always_show_az">A-Z immer anzeigen</string>
     <string name="settings_show_alphabet">A-Z in der App-Liste anzeigen</string>
     <string name="settings_edge_zone_width">Breite des Randbereichs zum Wischen</string>
@@ -110,7 +112,7 @@
     <string name="settings_icon_side">Symbolseite</string>
     <string name="settings_shade_gesture">Nach unten wischen für Benachrichtigungen</string>
     <string name="settings_shade_ready">Bereit — ziehe auf dem Startbildschirm nach unten</string>
-    <string name="settings_shade_not_ready">Ziehe auf dem Startbildschirm nach unten. Wenn nichts passiert, aktiviere Victoria Launcher unter „Bedienungshilfen“ — und falls der Schalter ausgegraut ist, erlaube zuerst eingeschränkte Einstellungen über die App-Info.</string>
+    <string name="settings_shade_not_ready">Ziehe auf dem Startbildschirm nach unten. Wenn nichts passiert, aktiviere Valeria Launcher unter „Bedienungshilfen“ — und falls der Schalter ausgegraut ist, erlaube zuerst eingeschränkte Einstellungen über die App-Info.</string>
     <string name="settings_enable">Aktivieren</string>
     <string name="settings_app_info">App-Info</string>
     <string name="settings_now_playing_show">Now Playing-Widget anzeigen</string>
@@ -188,7 +190,7 @@
     <string name="icon_picker_no_matches">Keine Symbole passen zu „%1$s“.</string>
 
     <!-- Welcome -->
-    <string name="welcome_title">Willkommen bei Victoria</string>
+    <string name="welcome_title">Willkommen bei Valeria</string>
     <string name="welcome_favorites">Drücke lange auf das Hintergrundbild, um Favoriten oder ein Widget hinzuzufügen oder die Einstellungen zu öffnen.</string>
     <string name="welcome_widget">Wische von einem der Bildschirmränder herein, um alle Apps zu sehen, und fahre über die A-Z-Leiste, um zu einem Buchstaben zu springen.</string>
     <string name="welcome_layout">Mit „Layout bearbeiten“ kannst du Elemente verschieben und die Abstände festlegen.</string>

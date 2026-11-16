@@ -1,11 +1,10 @@
-Victoria Launcher is a minimal, list-based Android home screen, and an open source alternative to Niagara Launcher.
+Valeria Launcher is a minimal, list-based Android home screen based on Victoria Launcher. Your favorites can appear or disappear as your day changes.
 
-The home screen holds a short list of favorites and nothing you did not put there. Everything else lives in an alphabetical app list you reach by swiping in from the edge of the screen, with an A-Z strip for jumping straight to a letter.
+• Set visibility rules for apps, shortcuts, and folders using Wi-Fi networks, time windows, or connected headphones.
+• Hide a favorite from the home screen after a set number of daily sessions. You can still find it in the app list and search.
+• Open search with a swipe up, or swipe in from the edge and jump to a letter in the alphabetical app list.
+• Customize the layout and add widgets, folders, and icon packs.
 
-A clock and date widget is included and any other widget can be added. Favorites can be folders, or the apps you open most, kept for you.
+Rules are checked on your device while the launcher is on screen. Android requires location permission to read Wi-Fi network names and usage access to count sessions. Both are optional and requested when you set up the relevant rule. Valeria has no ads, tracking, or internet permission.
 
-Layout, alignment, icon pack, icon and text size, spacing, font and colors are all adjustable, and the settings screen has a search box over the whole of it. There is an optional search box in the app list, optional notification counts on icons, optional Now Playing controls, and per-app renaming, icons and hiding.
-
-Work profiles are picked up automatically, and Android 15's private space is supported.
-
-No ads, no tracking, and no network access — the app holds no internet permission at all.
+Requires Android 8.0 or newer.

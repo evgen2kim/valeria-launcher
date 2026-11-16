@@ -46,7 +46,7 @@ object CrashLog {
         val when_ = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
         file(context).writeText(
             buildString {
-                appendLine("Victoria Launcher ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                appendLine("Valeria Launcher ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                 appendLine("Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
                 appendLine("${Build.MANUFACTURER} ${Build.MODEL}")
                 appendLine(when_)

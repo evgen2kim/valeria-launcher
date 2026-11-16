@@ -81,12 +81,15 @@ leans out, past it it snaps in. The A-Z list and its keyboard setting are untouc
 Download the APK from [Releases](https://github.com/evgen2kim/valeria-launcher/releases/latest).
 There is no store build yet; you can also build it from source (see [Build](#build)).
 
-Valeria still uses Victoria's package name, `dev.victorialauncher`, so the two
-cannot be installed side by side, and since the signatures differ you have to
-uninstall Victoria first. **Export settings** in Victoria before you do, and import
-the file in Valeria.
+Valeria uses the Android application ID `dev.valerialauncher` starting with
+`0.77.1-valeria.2`. If you use an earlier Valeria build, choose **Export settings**
+in that build, install the new Valeria alongside it, and choose **Import settings**
+in the new app. Select the new Valeria under **Settings → Apps → Default apps →
+Home app**. Add your widgets again, reselect any custom font file, and re-enable
+the optional permissions and system access you use. Once the new setup works,
+you can remove the old build.
 
-Then pick it under **Settings → Apps → Default apps → Home app**.
+Valeria and Victoria can be installed side by side.
 
 Requires Android 8.0 (API 26) or newer.
 

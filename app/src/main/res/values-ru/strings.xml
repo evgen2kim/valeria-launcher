@@ -1,6 +1,8 @@
 <resources>
-    <string name="app_name">Victoria Launcher</string>
-    <string name="accessibility_description">Позволяет открывать панель уведомлений жестом смахивания вниз. Victoria Launcher не умеет читать содержимое экрана.</string>
+    <string name="app_name">Valeria Launcher</string>
+    <string name="accessibility_service_name">Жесты Valeria Launcher</string>
+    <string name="now_playing_service_name">Valeria Launcher — сейчас играет</string>
+    <string name="accessibility_description">Позволяет открывать панель уведомлений жестом смахивания вниз. Valeria Launcher не умеет читать содержимое экрана.</string>
 
     <!-- Общие действия -->
     <string name="action_back">Назад</string>
@@ -15,7 +17,7 @@
     <string name="action_edit_icon_and_name">Персонализировать</string>
     <string name="action_move_to_folder">Переместить в папку…</string>
     <string name="action_change_icon">Изменить иконку…</string>
-    <string name="action_open_settings">Настройки Victoria</string>
+    <string name="action_open_settings">Настройки Valeria</string>
     <string name="action_remove_shortcut">Удалить ярлык</string>
 
     <!-- Главный экран -->
@@ -59,11 +61,11 @@
     <string name="applist_search">Поиск</string>
 
     <!-- Toasts -->
-    <string name="toast_enable_accessibility_shade">Включите Victoria Launcher в Настройках → Специальные возможности для открытия уведомлений</string>
-    <string name="toast_enable_accessibility_lock">Включите Victoria Launcher в Настройках → Специальные возможности для блокировки экрана</string>
+    <string name="toast_enable_accessibility_shade">Включите Valeria Launcher в Настройках → Специальные возможности для открытия уведомлений</string>
+    <string name="toast_enable_accessibility_lock">Включите Valeria Launcher в Настройках → Специальные возможности для блокировки экрана</string>
 
     <!-- Настройки -->
-    <string name="settings_title">Настройки Victoria</string>
+    <string name="settings_title">Настройки Valeria</string>
     <string name="settings_section_appearance">Внешний вид</string>
     <string name="settings_section_apps">Приложения</string>
     <string name="settings_section_about">О приложении</string>
@@ -116,7 +118,7 @@
     <string name="settings_icon_side">Расположение иконок</string>
     <string name="settings_shade_gesture">Отображение уведомлений при свайпе вниз</string>
     <string name="settings_shade_ready">Готово — потяните вниз на главном экране.</string>
-    <string name="settings_shade_not_ready">Потяните вниз на главном экране. Если ничего не происходит, Включите Victoria Launcher в специальных возможностях. Если и эта опция недоступна, то для начала разрешите доступ к настройкам в меню информации о приложении.</string>
+    <string name="settings_shade_not_ready">Потяните вниз на главном экране. Если ничего не происходит, Включите Valeria Launcher в специальных возможностях. Если и эта опция недоступна, то для начала разрешите доступ к настройкам в меню информации о приложении.</string>
     <string name="settings_enable">Включить</string>
     <string name="settings_app_info">Информация о приложении</string>
     <string name="settings_now_playing_show">Отобразить виджет &quot;Сейчас играет&quot;</string>
@@ -151,7 +153,7 @@
     <string name="settings_allow_rotation_detail">На телефонах отключено: доступная ширина составляет лишь около трети высоты, необходимой для такой компоновки. На планшетах включено по умолчанию.</string>
     <string name="settings_section_backup">Резервное копирование</string>
     <string name="settings_crash_copy">Скопировать последнюю ошибку</string>
-    <string name="settings_crash_detail">Работа программы Victoria Launcher Завершилась с ошибкой. Скопируйте сведения об ошибке, чтобы включить их в отчет об ошибке.</string>
+    <string name="settings_crash_detail">Работа программы Valeria Launcher Завершилась с ошибкой. Скопируйте сведения об ошибке, чтобы включить их в отчет об ошибке.</string>
     <string name="settings_crash_copied">Сведения об ошибке сохранёны в буфере обмена</string>
     <string name="settings_export">Экспортировать настройк</string>
     <string name="settings_export_detail">Сохранить избранное, папки, компоновку и прочее в один файл</string>
@@ -210,7 +212,7 @@
     <string name="icon_picker_no_matches">Иконок по запросу “%1$s” не найдено.</string>
 
     <!-- Приветствие -->
-    <string name="welcome_title">Приветствую в Victoria</string>
+    <string name="welcome_title">Приветствую в Valeria</string>
     <string name="welcome_favorites">Удерживайте по свободному месту чтобы вызвать меню настроек и добавления избранных.</string>
     <string name="welcome_widget">Проведите пальцем от любого края экрана, чтобы открыть все приложения, и поведите пальцем по алфавитной волне чтобы перейти к нужной букве.</string>
     <string name="welcome_layout">В режиме редактирования главного экрана вы можете передвигать объекты и настраивать отступы.</string>

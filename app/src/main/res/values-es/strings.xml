@@ -1,6 +1,8 @@
 <resources>
-    <string name="app_name">Victoria Launcher</string>
-    <string name="accessibility_description">Permite que el gesto de deslizar hacia abajo abra el panel de notificaciones. Victoria Launcher no lee ni actúa sobre el contenido de la pantalla.</string>
+    <string name="app_name">Valeria Launcher</string>
+    <string name="accessibility_service_name">Gestos de Valeria Launcher</string>
+    <string name="now_playing_service_name">Valeria Launcher — En reproducción</string>
+    <string name="accessibility_description">Permite que el gesto de deslizar hacia abajo abra el panel de notificaciones. Valeria Launcher no lee ni actúa sobre el contenido de la pantalla.</string>
 
     <!-- Shared actions -->
     <string name="action_back">Atrás</string>
@@ -15,7 +17,7 @@
     <string name="action_edit_icon_and_name">Editar icono y nombre</string>
     <string name="action_move_to_folder">Mover a carpeta…</string>
     <string name="action_change_icon">Cambiar icono…</string>
-    <string name="action_open_settings">Ajustes de Victoria Launcher</string>
+    <string name="action_open_settings">Ajustes de Valeria Launcher</string>
     <string name="action_remove_shortcut">Quitar acceso directo</string>
 
     <!-- Home screen -->
@@ -59,11 +61,11 @@
     <string name="applist_search">Buscar aplicaciones</string>
 
     <!-- Toasts -->
-    <string name="toast_enable_accessibility_shade">Activa Victoria Launcher en Ajustes → Accesibilidad para abrir las notificaciones</string>
-    <string name="toast_enable_accessibility_lock">Activa Victoria Launcher en Ajustes → Accesibilidad para bloquear la pantalla</string>
+    <string name="toast_enable_accessibility_shade">Activa Valeria Launcher en Ajustes → Accesibilidad para abrir las notificaciones</string>
+    <string name="toast_enable_accessibility_lock">Activa Valeria Launcher en Ajustes → Accesibilidad para bloquear la pantalla</string>
 
     <!-- Settings -->
-    <string name="settings_title">Ajustes de Victoria</string>
+    <string name="settings_title">Ajustes de Valeria</string>
     <string name="settings_section_appearance">Apariencia</string>
     <string name="settings_section_apps">Aplicaciones</string>
     <string name="settings_section_about">Acerca de</string>
@@ -90,7 +92,7 @@
     <string name="settings_edge_side">Qué borde abre la lista de aplicaciones</string>
     <string name="settings_double_tap_lock">Tocar dos veces para bloquear la pantalla</string>
     <string name="settings_double_tap_lock_detail">Toca dos veces la barra A-Z</string>
-    <string name="settings_lock_needs_accessibility">Requiere activar Victoria Launcher en Accesibilidad. Si ese interruptor está atenuado, abre la información de la aplicación y permite los ajustes restringidos desde el menú ⋮ primero.</string>
+    <string name="settings_lock_needs_accessibility">Requiere activar Valeria Launcher en Accesibilidad. Si ese interruptor está atenuado, abre la información de la aplicación y permite los ajustes restringidos desde el menú ⋮ primero.</string>
     <string name="settings_az_visibility">Mostrar A-Z en la pantalla de inicio</string>
     <string name="az_visibility_never">Nunca</string>
     <string name="az_visibility_landscape">Horizontal</string>
@@ -116,7 +118,7 @@
     <string name="settings_icon_side">Lado del icono</string>
     <string name="settings_shade_gesture">Deslizar hacia abajo para las notificaciones</string>
     <string name="settings_shade_ready">Listo — desliza hacia abajo en la pantalla de inicio</string>
-    <string name="settings_shade_not_ready">Desliza hacia abajo en la pantalla de inicio. Si no ocurre nada, activa Victoria Launcher en Accesibilidad; y si ese interruptor está atenuado, permite primero los ajustes restringidos desde la información de la aplicación.</string>
+    <string name="settings_shade_not_ready">Desliza hacia abajo en la pantalla de inicio. Si no ocurre nada, activa Valeria Launcher en Accesibilidad; y si ese interruptor está atenuado, permite primero los ajustes restringidos desde la información de la aplicación.</string>
     <string name="settings_enable">Activar</string>
     <string name="settings_app_info">Información de la aplicación</string>
     <string name="settings_now_playing_show">Mostrar el widget Reproduciendo ahora</string>
@@ -212,7 +214,7 @@
     <string name="icon_picker_no_matches">Ningún icono coincide con “%1$s”.</string>
 
     <!-- Welcome -->
-    <string name="welcome_title">Te damos la bienvenida a Victoria</string>
+    <string name="welcome_title">Te damos la bienvenida a Valeria</string>
     <string name="welcome_favorites">Mantén pulsado el fondo de pantalla para añadir favoritos, un widget o abrir los ajustes.</string>
     <string name="welcome_widget">Desliza desde cualquiera de los bordes de la pantalla para ver todas tus aplicaciones, y recorre la barra A-Z para saltar a una letra.</string>
     <string name="welcome_layout">Editar diseño te permite mover las cosas de sitio y ajustar el espaciado.</string>

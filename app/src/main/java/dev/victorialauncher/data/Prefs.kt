@@ -246,7 +246,7 @@ class Prefs(private val context: Context) {
         }
         val json = JSONObject()
             .put("format", EXPORT_FORMAT)
-            .put("app", "Victoria Launcher")
+            .put("app", "Valeria Launcher")
             .put("values", values)
             .toString(2)
         return ExportResult(json, omittedPrivateSpace)
@@ -262,9 +262,14 @@ class Prefs(private val context: Context) {
         val parsed = runCatching {
             val root = JSONObject(text)
             if (root.optInt("format") != EXPORT_FORMAT) return false
+            val fromLegacyPackage = root.optString("app") == "Victoria Launcher"
             val values = root.getJSONObject("values")
             buildList {
                 values.keys().forEach { name ->
+                    // Existing widget IDs belong to the old launcher’s widget host.
+                    if (fromLegacyPackage &&
+                        (name == Keys.WIDGET_ID.name || name == Keys.WIDGET_IDS.name)
+                    ) return@forEach
                     val entry = values.getJSONObject(name)
                     // Pair(...) rather than `to`: DataStore has an infix `to` of its own on
                     // Key, which builds a Preferences.Pair and not the one wanted here.

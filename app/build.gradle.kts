@@ -26,11 +26,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "dev.victorialauncher"
+        applicationId = "dev.valerialauncher"
         minSdk = 26
         targetSdk = 35
-        versionCode = 94
-        versionName = "0.77.1-valeria.1"
+        versionCode = 95
+        versionName = "0.77.1-valeria.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -1,1 +1,1 @@
-An open source Niagara Launcher alternative — a minimal, list-based home screen
+A home screen with favorites that adapt to your day

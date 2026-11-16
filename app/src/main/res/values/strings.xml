@@ -1,6 +1,8 @@
 <resources>
-    <string name="app_name">Victoria Launcher</string>
-    <string name="accessibility_description">Lets the swipe-down gesture open the notification shade. Victoria Launcher does not read or act on screen content.</string>
+    <string name="app_name">Valeria Launcher</string>
+    <string name="accessibility_service_name">Valeria Launcher gestures</string>
+    <string name="now_playing_service_name">Valeria Launcher Now Playing</string>
+    <string name="accessibility_description">Lets the swipe-down gesture open the notification shade. Valeria Launcher does not read or act on screen content.</string>
 
     <!-- Shared actions -->
     <string name="action_back">Back</string>
@@ -15,7 +17,7 @@
     <string name="action_edit_icon_and_name">Edit icon &amp; name</string>
     <string name="action_move_to_folder">Move to folder…</string>
     <string name="action_change_icon">Change icon…</string>
-    <string name="action_open_settings">Victoria Launcher settings</string>
+    <string name="action_open_settings">Valeria Launcher settings</string>
     <string name="action_remove_shortcut">Remove shortcut</string>
 
     <!-- Home screen -->
@@ -59,11 +61,11 @@
     <string name="applist_search">Search apps</string>
 
     <!-- Toasts -->
-    <string name="toast_enable_accessibility_shade">Enable Victoria Launcher in Settings → Accessibility to open notifications</string>
-    <string name="toast_enable_accessibility_lock">Enable Victoria Launcher in Settings → Accessibility to lock the screen</string>
+    <string name="toast_enable_accessibility_shade">Enable Valeria Launcher in Settings → Accessibility to open notifications</string>
+    <string name="toast_enable_accessibility_lock">Enable Valeria Launcher in Settings → Accessibility to lock the screen</string>
 
     <!-- Settings -->
-    <string name="settings_title">Victoria settings</string>
+    <string name="settings_title">Valeria settings</string>
     <string name="settings_section_home">Home screen</string>
     <string name="settings_section_app_list">App list</string>
     <string name="settings_section_gestures">Gestures</string>
@@ -117,7 +119,7 @@
     <string name="settings_edge_side">Which edge opens the app list</string>
     <string name="settings_double_tap_lock">Double-tap to lock screen</string>
     <string name="settings_double_tap_lock_detail">Tap the A-Z strip twice</string>
-    <string name="settings_lock_needs_accessibility">Needs Victoria Launcher enabled under Accessibility. If that switch is greyed out, open App info and allow restricted settings from the ⋮ menu first.</string>
+    <string name="settings_lock_needs_accessibility">Needs Valeria Launcher enabled under Accessibility. If that switch is greyed out, open App info and allow restricted settings from the ⋮ menu first.</string>
     <string name="settings_az_visibility">Show A-Z on the home screen</string>
     <string name="az_visibility_never">Never</string>
     <string name="az_visibility_landscape">Landscape</string>
@@ -153,7 +155,7 @@
     <string name="settings_icon_side">Icon side</string>
     <string name="settings_shade_gesture">Swipe down for notifications</string>
     <string name="settings_shade_ready">Ready — pull down on the home screen</string>
-    <string name="settings_shade_not_ready">Pull down on the home screen. If nothing happens, enable Victoria Launcher under Accessibility — and if that switch is greyed out, allow restricted settings from App info first.</string>
+    <string name="settings_shade_not_ready">Pull down on the home screen. If nothing happens, enable Valeria Launcher under Accessibility — and if that switch is greyed out, allow restricted settings from App info first.</string>
     <string name="settings_enable">Enable</string>
     <string name="settings_app_info">App info</string>
     <string name="settings_now_playing_show">Show Now Playing widget</string>
@@ -259,7 +261,7 @@
     <string name="icon_picker_no_matches">No icons match “%1$s”.</string>
 
     <!-- Welcome -->
-    <string name="welcome_title">Welcome to Victoria</string>
+    <string name="welcome_title">Welcome to Valeria</string>
     <string name="welcome_favorites">Long-press the wallpaper to add favorites, a widget, or open settings.</string>
     <string name="welcome_widget">Swipe in from either edge of the screen for all your apps, and slide along the A-Z strip to jump to a letter.</string>
     <string name="welcome_layout">Edit layout lets you move things around and set the spacing.</string>
@@ -292,7 +294,7 @@
     <string name="widget_clock_weather_opacity">Weather opacity</string>
     <string name="widget_clock_weather_opens">What tapping the weather opens</string>
     <string name="widget_clock_weather_waiting">Waiting for a weather app</string>
-    <string name="widget_clock_weather_hint">Weather comes from a weather app that already has it, so Victoria needs no network access and never asks where you are. In Breezy Weather, turn on Settings → Widgets &amp; Live Wallpaper → Data sharing.</string>
+    <string name="widget_clock_weather_hint">Weather comes from a weather app that already has it, so Valeria needs no network access and never asks where you are. In Breezy Weather, turn on Settings → Widgets &amp; Live Wallpaper → Data sharing.</string>
     <string name="widget_clock_notifications_show">Notification count</string>
     <string name="widget_clock_notifications_hide">No count</string>
     <string name="widget_clock_notifications_size">Count size</string>
